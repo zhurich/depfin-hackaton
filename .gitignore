@@ -1,0 +1,33 @@
+# ---------- Секреты подписи (ТЗ п. 3.4) ----------
+android/keystore.properties
+android/keystore/
+*.jks
+*.keystore
+
+# ---------- Android / Gradle ----------
+android/local.properties
+android/.gradle/
+android/build/
+android/app/build/
+android/captures/
+android/.cxx/
+*.apk
+*.aab
+*.ap_
+*.dex
+
+# Веб-сборка кладётся в assets и собирается из исходников.
+android/app/src/main/assets/www/
+
+# ---------- Node ----------
+web/node_modules/
+web/dist/
+web/*.tsbuildinfo
+npm-debug.log*
+
+# ---------- IDE и ОС ----------
+.idea/
+*.iml
+.vscode/
+.DS_Store
+Thumbs.db
