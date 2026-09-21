@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Совпадает с фирменными токенами в web/src/styles/global.css. -->
+    <color name="brand">#4B2E83</color>
+    <color name="brand_dark">#38215F</color>
+    <color name="background">#F6F4FB</color>
+    <color name="white">#FFFFFF</color>
+</resources>

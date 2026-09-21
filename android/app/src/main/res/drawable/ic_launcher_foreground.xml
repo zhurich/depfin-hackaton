@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 108×108 dp, содержимое в безопасной зоне 66×66 -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!-- Ушки -->
+    <path
+        android:fillColor="#F2913D"
+        android:pathData="M40,42 L34,24 L54,34 Z" />
+    <path
+        android:fillColor="#F2913D"
+        android:pathData="M68,42 L74,24 L54,34 Z" />
+
+    <!-- Голова -->
+    <path
+        android:fillColor="#F2913D"
+        android:pathData="M54,54 m-22,0 a22,22 0 1,0 44,0 a22,22 0 1,0 -44,0" />
+
+    <!-- Светлая мордочка -->
+    <path
+        android:fillColor="#FFE6CC"
+        android:pathData="M54,60 m-12,0 a12,9.5 0 1,0 24,0 a12,9.5 0 1,0 -24,0" />
+
+    <!-- Глаза -->
+    <path
+        android:fillColor="#C96A1F"
+        android:pathData="M45,49 m-3.4,0 a3.4,3.4 0 1,0 6.8,0 a3.4,3.4 0 1,0 -6.8,0" />
+    <path
+        android:fillColor="#C96A1F"
+        android:pathData="M63,49 m-3.4,0 a3.4,3.4 0 1,0 6.8,0 a3.4,3.4 0 1,0 -6.8,0" />
+
+    <!-- Нос -->
+    <path
+        android:fillColor="#C96A1F"
+        android:pathData="M54,57 m-3,0 a3,2.4 0 1,0 6,0 a3,2.4 0 1,0 -6,0" />
+
+    <!-- Улыбка -->
+    <path
+        android:strokeColor="#C96A1F"
+        android:strokeWidth="2.4"
+        android:strokeLineCap="round"
+        android:pathData="M48,63 q6,7 12,0" />
+
+    <!-- Монетка: связь с темой финансов -->
+    <path
+        android:fillColor="#F5C542"
+        android:pathData="M74,74 m-9,0 a9,9 0 1,0 18,0 a9,9 0 1,0 -18,0" />
+    <path
+        android:strokeColor="#B8860B"
+        android:strokeWidth="1.6"
+        android:strokeLineCap="round"
+        android:pathData="M74,69 L74,79 M71,72 L77,72 M71,76 L77,76" />
+</vector>
