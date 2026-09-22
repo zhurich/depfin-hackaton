@@ -7,7 +7,7 @@ import type { PurchaseEntry, ShopItem } from './types'
 const ball: ShopItem = {
   id: 'ball',
   title: 'Мячик',
-  emoji: '⚽',
+  icon: 'ball',
   price: 50,
   kind: 'optional',
   effects: { joy: 20 },
@@ -18,7 +18,7 @@ const ball: ShopItem = {
 const stickers: ShopItem = {
   id: 'stickers',
   title: 'Наклейки',
-  emoji: '✨',
+  icon: 'star',
   price: 20,
   kind: 'optional',
   effects: { joy: 10 },
@@ -41,7 +41,7 @@ function entry(item: ShopItem): PurchaseEntry {
   return {
     itemId: item.id,
     title: item.title,
-    emoji: item.emoji,
+    icon: item.icon,
     price: item.price,
     kind: item.kind,
     at: 0,

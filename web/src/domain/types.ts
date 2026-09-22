@@ -1,5 +1,17 @@
 // Доменные типы, без зависимостей от React/DOM.
 
+// Icon.tsx должен отрисовать каждое имя из списка.
+export type IconName =
+  | 'home' | 'envelope' | 'cart' | 'jar' | 'star' | 'chart' | 'book' | 'user'
+  | 'back' | 'check' | 'bulb' | 'plus' | 'minus' | 'coin' | 'lock' | 'refresh'
+  | 'trash' | 'sound' | 'motion' | 'close' | 'chevron'
+  | 'bowl' | 'salad' | 'drop' | 'bath' | 'med' | 'ball' | 'cap' | 'boat'
+  | 'cake' | 'plant' | 'smile' | 'kite' | 'paw'
+  | 'scooter' | 'house' | 'telescope' | 'beach' | 'bike' | 'guitar'
+  | 'skates' | 'tent' | 'camera' | 'puzzle'
+  | 'apple' | 'bread' | 'cup' | 'choco' | 'bun'
+  | 'calendar' | 'hourglass' | 'receipt' | 'target' | 'scales'
+
 export type ExpenseKind = 'essential' | 'optional'
 
 export type BudgetLane = ExpenseKind | 'savings'
@@ -38,7 +50,7 @@ export interface BudgetPlan {
 export interface ShopItem {
   id: string
   title: string
-  emoji: string
+  icon: IconName
   price: number
   kind: ExpenseKind
   effects: Partial<PetStats>
@@ -50,7 +62,7 @@ export interface ShopItem {
 export interface GoalTemplate {
   id: string
   title: string
-  emoji: string
+  icon: IconName
   cost: number
   caption: string
 }
@@ -84,7 +96,7 @@ interface QuestBase {
 export interface AllocateQuest extends QuestBase {
   kind: 'allocate'
   amount: number
-  lanes: { id: BudgetLane; title: string; emoji: string }[]
+  lanes: { id: BudgetLane; title: string; icon: IconName }[]
   rules: { lane: BudgetLane; min?: number; max?: number; because: string }[]
   goodExplanation: string
   softExplanation: string
@@ -93,7 +105,7 @@ export interface AllocateQuest extends QuestBase {
 export interface BasketQuest extends QuestBase {
   kind: 'basket'
   budget: number
-  options: { id: string; title: string; emoji: string; price: number; needed: boolean }[]
+  options: { id: string; title: string; icon: IconName; price: number; needed: boolean }[]
   mustHave: string[]
   goodExplanation: string
   softExplanation: string
@@ -101,7 +113,7 @@ export interface BasketQuest extends QuestBase {
 
 export interface OrderQuest extends QuestBase {
   kind: 'order'
-  items: { id: string; title: string; emoji: string }[]
+  items: { id: string; title: string; icon: IconName }[]
   correctOrder: string[]
   goodExplanation: string
   softExplanation: string
@@ -122,7 +134,7 @@ export interface ChoiceQuest extends QuestBase {
   options: {
     id: string
     title: string
-    emoji: string
+    icon: IconName
     good: boolean
     consequence: string
     rewardDelta?: number
@@ -150,7 +162,7 @@ export interface LedgerEntry {
 export interface PurchaseEntry {
   itemId: string
   title: string
-  emoji: string
+  icon: IconName
   price: number
   kind: ExpenseKind
   at: number

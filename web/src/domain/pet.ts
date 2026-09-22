@@ -1,7 +1,7 @@
 // Ошибки не убивают питомца и не обнуляют прогресс: показатели падают только до «грустно», рост не убывает.
 import { STAGES } from '../content/appearance'
 import { NEEDS_THRESHOLD, STAT_MAX, STAT_MIN } from './rules'
-import type { PetStage, PetStats } from './types'
+import type { IconName, PetStage, PetStats } from './types'
 
 export function clampStat(value: number): number {
   return Math.max(STAT_MIN, Math.min(STAT_MAX, Math.round(value)))
@@ -79,8 +79,14 @@ export const STAT_LABEL: Record<keyof PetStats, string> = {
   joy: 'Радость',
 }
 
-export const STAT_EMOJI: Record<keyof PetStats, string> = {
-  fullness: '🍽️',
-  care: '🛁',
-  joy: '😊',
+export const STAT_ICON: Record<keyof PetStats, IconName> = {
+  fullness: 'bowl',
+  care: 'bath',
+  joy: 'smile',
+}
+
+export const STAT_COLOR: Record<keyof PetStats, { ink: string; wash: string }> = {
+  fullness: { ink: 'var(--need)', wash: 'var(--need-wash)' },
+  care: { ink: 'var(--save)', wash: 'var(--save-wash)' },
+  joy: { ink: 'var(--want)', wash: 'var(--want-wash)' },
 }

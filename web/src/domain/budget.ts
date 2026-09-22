@@ -1,5 +1,5 @@
 import { PLAN_TOLERANCE_ABS } from './rules'
-import type { BudgetLane, BudgetPlan } from './types'
+import type { BudgetLane, BudgetPlan, IconName } from './types'
 
 export const EMPTY_PLAN: BudgetPlan = { essential: 0, optional: 0, savings: 0 }
 
@@ -15,12 +15,25 @@ export const LANE_FULL_TITLE: Record<BudgetLane, string> = {
   savings: 'Накопления',
 }
 
-export const LANE_EMOJI: Record<BudgetLane, string> = {
-  essential: '🥣',
-  optional: '🎈',
-  savings: '🐷',
+export const LANE_ICON: Record<BudgetLane, IconName> = {
+  essential: 'bowl',
+  optional: 'kite',
+  savings: 'jar',
 }
 
+export const LANE_CAPTION: Record<BudgetLane, string> = {
+  essential: 'Еда, вода, уход',
+  optional: 'Игрушки и радости',
+  savings: 'Шаг к большой цели',
+}
+
+export const LANE_THEME: Record<BudgetLane, { ink: string; wash: string; border: string }> = {
+  essential: { ink: 'var(--need)', wash: 'var(--need-wash)', border: 'var(--need-border)' },
+  optional: { ink: 'var(--want)', wash: 'var(--want-wash)', border: 'var(--want-border)' },
+  savings: { ink: 'var(--save)', wash: 'var(--save-wash)', border: 'var(--save-border)' },
+}
+
+// узор — чтобы направление различалось не только цветом
 export const LANE_PATTERN: Record<BudgetLane, 'solid' | 'stripes' | 'dots'> = {
   essential: 'solid',
   optional: 'stripes',

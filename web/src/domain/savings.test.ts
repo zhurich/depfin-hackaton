@@ -14,7 +14,7 @@ function goal(patch: Partial<Goal> = {}): Goal {
   return {
     id: 'scooter',
     title: 'Самокат',
-    emoji: '🛴',
+    icon: 'scooter',
     cost: 240,
     caption: '',
     custom: false,

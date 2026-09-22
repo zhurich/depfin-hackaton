@@ -23,11 +23,11 @@ export interface Palette {
 }
 
 export const PALETTES: Palette[] = [
-  { id: 'orange', title: 'Рыжий', body: '#F2913D', belly: '#FFE6CC', detail: '#C96A1F' },
-  { id: 'mint', title: 'Мятный', body: '#5FC3A6', belly: '#DFF5EE', detail: '#2F8C74' },
-  { id: 'lilac', title: 'Сиреневый', body: '#9B7EDE', belly: '#EBE3FB', detail: '#6A4BB5' },
-  { id: 'sky', title: 'Небесный', body: '#5AA9E6', belly: '#DDEEFB', detail: '#2A74B0' },
-  { id: 'sand', title: 'Песочный', body: '#E0B25C', belly: '#FBF0D8', detail: '#A97C2A' },
+  { id: 'orange', title: 'Рыжий', body: '#F5A65B', belly: '#FFF1DC', detail: '#C9702A' },
+  { id: 'mint', title: 'Мятный', body: '#6FCFAE', belly: '#E4F7EF', detail: '#2F8C74' },
+  { id: 'lilac', title: 'Сиреневый', body: '#A98BE8', belly: '#EFE7FD', detail: '#6A4BB5' },
+  { id: 'sky', title: 'Небесный', body: '#6FB3EF', belly: '#E2F0FD', detail: '#2A74B0' },
+  { id: 'sand', title: 'Песочный', body: '#E8C070', belly: '#FBF0D8', detail: '#A97C2A' },
 ]
 
 export interface Accessory {

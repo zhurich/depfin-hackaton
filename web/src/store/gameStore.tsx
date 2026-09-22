@@ -128,7 +128,7 @@ function reducer(state: GameState, action: Action): GameState {
       const purchase = {
         itemId: item.id,
         title: item.title,
-        emoji: item.emoji,
+        icon: item.icon,
         price: item.price,
         kind: item.kind,
         at: Date.now(),

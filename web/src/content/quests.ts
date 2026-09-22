@@ -1,4 +1,5 @@
-import type { Quest, QuestTopic } from '../domain/types'
+// Чтобы добавить задание, достаточно дописать объект в массив.
+import type { IconName, Quest, QuestTopic } from '../domain/types'
 
 export const TOPIC_TITLES: Record<QuestTopic, string> = {
   planning: 'Планирование бюджета',
@@ -6,10 +7,10 @@ export const TOPIC_TITLES: Record<QuestTopic, string> = {
   spending: 'Покупки и оплата',
 }
 
-export const TOPIC_EMOJI: Record<QuestTopic, string> = {
-  planning: '🗂️',
-  saving: '🐷',
-  spending: '🛒',
+export const TOPIC_ICON: Record<QuestTopic, IconName> = {
+  planning: 'envelope',
+  saving: 'jar',
+  spending: 'cart',
 }
 
 export const QUESTS: Quest[] = [
@@ -24,9 +25,9 @@ export const QUESTS: Quest[] = [
     baseReward: 20,
     amount: 120,
     lanes: [
-      { id: 'essential', title: 'Нужное', emoji: '🥣' },
-      { id: 'optional', title: 'Желанное', emoji: '🎈' },
-      { id: 'savings', title: 'Копилка', emoji: '🐷' },
+      { id: 'essential', title: 'Нужное', icon: 'bowl' },
+      { id: 'optional', title: 'Желанное', icon: 'kite' },
+      { id: 'savings', title: 'Копилка', icon: 'jar' },
     ],
     rules: [
       { lane: 'essential', min: 60, because: 'Еда и уход на неделю стоят около 60 фиников.' },
@@ -46,10 +47,10 @@ export const QUESTS: Quest[] = [
     task: 'Расставь покупки по важности: самое нужное — наверх.',
     baseReward: 18,
     items: [
-      { id: 'food', title: 'Еда на неделю', emoji: '🥣' },
-      { id: 'wash', title: 'Купание', emoji: '🛁' },
-      { id: 'piggy', title: 'Отложить в копилку', emoji: '🐷' },
-      { id: 'toy', title: 'Новая игрушка', emoji: '🧸' },
+      { id: 'food', title: 'Еда на неделю', icon: 'bowl' },
+      { id: 'wash', title: 'Купание', icon: 'bath' },
+      { id: 'piggy', title: 'Отложить в копилку', icon: 'jar' },
+      { id: 'toy', title: 'Новая игрушка', icon: 'ball' },
     ],
     correctOrder: ['food', 'wash', 'piggy', 'toy'],
     goodExplanation:
@@ -106,7 +107,7 @@ export const QUESTS: Quest[] = [
       {
         id: 'wait',
         title: 'Подождать неделю и купить самокат',
-        emoji: '🛴',
+        icon: 'scooter',
         good: true,
         consequence:
           'Через неделю Финни накопил и купил самокат. Торт никуда не делся — его можно съесть потом.',
@@ -116,7 +117,7 @@ export const QUESTS: Quest[] = [
       {
         id: 'cake',
         title: 'Взять торт из копилки',
-        emoji: '🎂',
+        icon: 'cake',
         good: false,
         consequence:
           'Торт был вкусный, но копилка опустела до 140. До самоката снова далеко — ещё около двух недель.',
@@ -126,7 +127,7 @@ export const QUESTS: Quest[] = [
       {
         id: 'both',
         title: 'Отложить ещё и купить торт на следующей неделе',
-        emoji: '📆',
+        icon: 'calendar',
         good: true,
         consequence:
           'Финни сначала закрыл цель, а торт купил из денег следующей недели. Получилось и то, и другое.',
@@ -145,11 +146,11 @@ export const QUESTS: Quest[] = [
     baseReward: 22,
     budget: 80,
     options: [
-      { id: 'food', title: 'Каша', emoji: '🥣', price: 20, needed: true },
-      { id: 'wash', title: 'Купание', emoji: '🛁', price: 25, needed: true },
-      { id: 'sticker', title: 'Наклейки', emoji: '✨', price: 20, needed: false },
-      { id: 'hat', title: 'Шапочка', emoji: '🧢', price: 45, needed: false },
-      { id: 'boat', title: 'Кораблик', emoji: '⛵', price: 55, needed: false },
+      { id: 'food', title: 'Каша', icon: 'bowl', price: 20, needed: true },
+      { id: 'wash', title: 'Купание', icon: 'bath', price: 25, needed: true },
+      { id: 'sticker', title: 'Наклейки', icon: 'star', price: 20, needed: false },
+      { id: 'hat', title: 'Шапочка', icon: 'cap', price: 45, needed: false },
+      { id: 'boat', title: 'Кораблик', icon: 'boat', price: 55, needed: false },
     ],
     mustHave: ['food', 'wash'],
     goodExplanation:
@@ -169,11 +170,11 @@ export const QUESTS: Quest[] = [
     baseReward: 20,
     budget: 70,
     options: [
-      { id: 'food', title: 'Обед', emoji: '🥗', price: 35, needed: true },
-      { id: 'water', title: 'Вода', emoji: '💧', price: 10, needed: true },
-      { id: 'wash', title: 'Купание', emoji: '🛁', price: 25, needed: true },
-      { id: 'cake', title: 'Торт', emoji: '🎂', price: 60, needed: false },
-      { id: 'ball', title: 'Мячик', emoji: '⚽', price: 25, needed: false },
+      { id: 'food', title: 'Обед', icon: 'salad', price: 35, needed: true },
+      { id: 'water', title: 'Вода', icon: 'drop', price: 10, needed: true },
+      { id: 'wash', title: 'Купание', icon: 'bath', price: 25, needed: true },
+      { id: 'cake', title: 'Торт', icon: 'cake', price: 60, needed: false },
+      { id: 'ball', title: 'Мячик', icon: 'ball', price: 25, needed: false },
     ],
     mustHave: ['food', 'water', 'wash'],
     goodExplanation:
@@ -211,7 +212,7 @@ export const QUESTS: Quest[] = [
       {
         id: 'one',
         title: 'Купить одну шапочку за 45',
-        emoji: '🧢',
+        icon: 'cap',
         good: true,
         consequence:
           'Финни потратил 45 и получил то, что нужно. Остальные 35 остались в кошельке.',
@@ -221,7 +222,7 @@ export const QUESTS: Quest[] = [
       {
         id: 'two',
         title: 'Взять две по акции за 80',
-        emoji: '🧢',
+        icon: 'cap',
         good: false,
         consequence:
           'Финни потратил на 35 фиников больше, а вторая шапочка лежит без дела. Скидка выгодна, только если вещь действительно нужна.',
@@ -231,7 +232,7 @@ export const QUESTS: Quest[] = [
       {
         id: 'none',
         title: 'Не покупать сейчас',
-        emoji: '⏳',
+        icon: 'hourglass',
         good: true,
         consequence:
           'Финни отложил покупку. Деньги остались целы, шапочку можно купить на следующей неделе.',

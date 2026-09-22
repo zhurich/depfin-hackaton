@@ -5,7 +5,7 @@ export const SHOP_ITEMS: ShopItem[] = [
   {
     id: 'porridge',
     title: 'Каша',
-    emoji: '🥣',
+    icon: 'bowl',
     price: 20,
     kind: 'essential',
     effects: { fullness: 30 },
@@ -15,7 +15,7 @@ export const SHOP_ITEMS: ShopItem[] = [
   {
     id: 'dinner',
     title: 'Обед с овощами',
-    emoji: '🥗',
+    icon: 'salad',
     price: 35,
     kind: 'essential',
     effects: { fullness: 45, joy: 5 },
@@ -25,7 +25,7 @@ export const SHOP_ITEMS: ShopItem[] = [
   {
     id: 'water',
     title: 'Чистая вода',
-    emoji: '💧',
+    icon: 'drop',
     price: 10,
     kind: 'essential',
     effects: { fullness: 10, care: 5 },
@@ -35,7 +35,7 @@ export const SHOP_ITEMS: ShopItem[] = [
   {
     id: 'wash',
     title: 'Купание и уход',
-    emoji: '🛁',
+    icon: 'bath',
     price: 25,
     kind: 'essential',
     effects: { care: 45 },
@@ -45,7 +45,7 @@ export const SHOP_ITEMS: ShopItem[] = [
   {
     id: 'checkup',
     title: 'Осмотр у доктора',
-    emoji: '🩺',
+    icon: 'med',
     price: 40,
     kind: 'essential',
     effects: { care: 25, fullness: 10, joy: 5 },
@@ -57,7 +57,7 @@ export const SHOP_ITEMS: ShopItem[] = [
   {
     id: 'ball',
     title: 'Мячик',
-    emoji: '⚽',
+    icon: 'ball',
     price: 25,
     kind: 'optional',
     effects: { joy: 20 },
@@ -67,7 +67,7 @@ export const SHOP_ITEMS: ShopItem[] = [
   {
     id: 'stickers',
     title: 'Наклейки',
-    emoji: '✨',
+    icon: 'star',
     price: 20,
     kind: 'optional',
     effects: { joy: 15 },
@@ -77,7 +77,7 @@ export const SHOP_ITEMS: ShopItem[] = [
   {
     id: 'hat',
     title: 'Шапочка',
-    emoji: '🧢',
+    icon: 'cap',
     price: 45,
     kind: 'optional',
     effects: { joy: 28 },
@@ -87,7 +87,7 @@ export const SHOP_ITEMS: ShopItem[] = [
   {
     id: 'boat',
     title: 'Кораблик',
-    emoji: '⛵',
+    icon: 'boat',
     price: 55,
     kind: 'optional',
     effects: { joy: 32 },
@@ -97,7 +97,7 @@ export const SHOP_ITEMS: ShopItem[] = [
   {
     id: 'cake',
     title: 'Праздничный торт',
-    emoji: '🎂',
+    icon: 'cake',
     price: 60,
     kind: 'optional',
     effects: { joy: 35, fullness: 10 },
@@ -107,7 +107,7 @@ export const SHOP_ITEMS: ShopItem[] = [
   {
     id: 'book',
     title: 'Книжка',
-    emoji: '📗',
+    icon: 'book',
     price: 30,
     kind: 'optional',
     effects: { joy: 18 },
@@ -117,7 +117,7 @@ export const SHOP_ITEMS: ShopItem[] = [
   {
     id: 'plant',
     title: 'Цветок в горшке',
-    emoji: '🪴',
+    icon: 'plant',
     price: 35,
     kind: 'optional',
     effects: { joy: 20, care: 5 },
