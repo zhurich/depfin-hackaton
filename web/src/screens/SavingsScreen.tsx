@@ -1,7 +1,20 @@
 import { useState } from 'react'
 
 import { CUSTOM_GOAL_COSTS, CUSTOM_GOAL_SUBJECTS } from '../content/goals'
-import { Button, Card, ConfirmSheet, Money, Note, ProgressBar, Screen, Sheet, Stepper } from '../components/ui'
+import { Icon } from '../components/Icon'
+import {
+  Button,
+  Card,
+  ConfirmSheet,
+  Glyph,
+  Money,
+  Note,
+  ProgressRing,
+  RowButton,
+  ScreenHead,
+  Sheet,
+  Stepper,
+} from '../components/ui'
 import {
   averageDeposit,
   forecastGoal,
@@ -14,7 +27,7 @@ import { playSound } from '../platform/sound'
 import { useGame } from '../store/gameStore'
 import type { Goal } from '../domain/types'
 
-export function SavingsScreen({ onBack }: { onBack: () => void }) {
+export function SavingsScreen() {
   const { state, dispatch, activeGoal } = useGame()
 
   const [depositAmount, setDepositAmount] = useState(() => Math.min(20, state.balance))
@@ -27,13 +40,26 @@ export function SavingsScreen({ onBack }: { onBack: () => void }) {
 
   if (!activeGoal) {
     return (
-      <Screen title="Выбери цель" onBack={onBack}>
-        <Note tone="info" title="Зачем нужна цель">
-          Цель — это то, ради чего копят. У неё есть цена, и видно, сколько осталось.
-        </Note>
-        <GoalPicker onPick={(id) => dispatch({ type: 'chooseGoal', goalId: id })} />
-        <Button variant="secondary" block onClick={() => setCustomOpen(true)}>
-          ✏️ Придумать свою цель
+      <>
+        <ScreenHead title="Выбери цель" sub="Цель — это то, ради чего копят. У неё есть цена, и видно, сколько осталось." />
+        <div className="stack">
+          {state.goals.map((g) => (
+            <RowButton
+              key={g.id}
+              icon={g.icon}
+              wash="var(--save-wash)"
+              color="var(--save)"
+              title={g.title}
+              sub={g.caption}
+              note={g.saved > 0 ? `уже накоплено ${g.saved} Ф` : undefined}
+              noteColor="var(--save-deep)"
+              right={<span className="row-btn__price">{g.cost} Ф</span>}
+              onClick={() => dispatch({ type: 'chooseGoal', goalId: g.id })}
+            />
+          ))}
+        </div>
+        <Button variant="quiet" block icon="plus" onClick={() => setCustomOpen(true)}>
+          Придумать свою цель
         </Button>
         <CustomGoalSheet
           open={customOpen}
@@ -43,7 +69,7 @@ export function SavingsScreen({ onBack }: { onBack: () => void }) {
             setCustomOpen(false)
           }}
         />
-      </Screen>
+      </>
     )
   }
 
@@ -53,31 +79,36 @@ export function SavingsScreen({ onBack }: { onBack: () => void }) {
   const preview = previewWithdraw(activeGoal, withdrawAmount, average)
 
   return (
-    <Screen title="Копилка" onBack={onBack}>
-      <Card>
-        <div className="row">
-          <span style={{ fontSize: 44 }} aria-hidden="true">
-            {activeGoal.emoji}
+    <>
+      <ScreenHead title="Копилка" sub="Откладывай сразу, как появились финики — так цель придёт быстрее." />
+
+      <Card
+        style={{
+          background: 'var(--save-wash)',
+          borderColor: 'var(--save-border)',
+          boxShadow: '0 5px 0 var(--save-border)',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          gap: 14,
+          textAlign: 'center',
+        }}
+      >
+        <div className="row" style={{ gap: 9 }}>
+          <Glyph name={activeGoal.icon} wash="var(--save)" color="#fff" size="sm" />
+          <span style={{ fontFamily: 'var(--font-head)', fontWeight: 800, fontSize: 19 }}>
+            {activeGoal.title}
           </span>
-          <div style={{ minWidth: 0 }}>
-            <h2>{activeGoal.title}</h2>
-            <p className="muted">{activeGoal.caption}</p>
-          </div>
         </div>
 
-        <div style={{ marginTop: 'var(--sp-3)' }} className="stack stack--tight">
-          <ProgressBar value={goalProgress(activeGoal)} label={activeGoal.title} />
-          <div className="row row--between">
-            <span className="muted">Накоплено</span>
-            <span className="money">
-              {activeGoal.saved} из {activeGoal.cost} Ф
-            </span>
+        <ProgressRing value={goalProgress(activeGoal)} label={activeGoal.title} />
+
+        <div>
+          <div className="num" style={{ fontSize: 32, color: 'var(--save-deep)', lineHeight: 1 }}>
+            {activeGoal.saved} / {activeGoal.cost}
           </div>
-          <div className="row row--between">
-            <span className="muted">Осталось накопить</span>
-            <span className="money">
-              {remaining} {pluralFinik(remaining)}
-            </span>
+          <div className="muted" style={{ color: 'var(--save-ink)', marginTop: 5 }}>
+            осталось {remaining} {pluralFinik(remaining)}
           </div>
         </div>
       </Card>
@@ -88,36 +119,31 @@ export function SavingsScreen({ onBack }: { onBack: () => void }) {
 
       {remaining > 0 && (
         <Card>
-          <h3>Отложить в копилку</h3>
-          <p className="muted" style={{ margin: '4px 0 12px' }}>
-            Свободно: <Money value={state.balance} />
-          </p>
-
-          <Stepper
-            value={Math.min(depositAmount, maxDeposit)}
-            onChange={setDepositAmount}
-            max={maxDeposit}
-            step={10}
-            label="Сумма пополнения"
-          />
-
-          <div style={{ marginTop: 'var(--sp-3)' }}>
+          <div className="stack">
+            <h3>Отложить в копилку</h3>
+            <Stepper
+              value={Math.min(depositAmount, maxDeposit)}
+              onChange={setDepositAmount}
+              max={maxDeposit}
+              step={10}
+              label="Сумма пополнения"
+            />
             <Button
+              variant="save"
               block
-              large
+              icon="jar"
               disabled={maxDeposit <= 0 || depositAmount <= 0}
               onClick={() => {
                 dispatch({ type: 'deposit', amount: Math.min(depositAmount, maxDeposit) })
                 playSound('coin')
               }}
             >
-              🐷 Отложить {Math.min(depositAmount, maxDeposit)} Ф
+              Отложить {Math.min(depositAmount, maxDeposit)} Ф
             </Button>
-            {maxDeposit <= 0 && (
-              <p className="muted" style={{ marginTop: 8 }}>
-                Свободных фиников нет. Выполни задание или дождись следующей недели.
-              </p>
-            )}
+            <p className="muted">
+              Свободно сейчас: <Money value={state.balance} />.
+              {maxDeposit <= 0 && ' Выполни задание или дождись следующей недели.'}
+            </p>
           </div>
         </Card>
       )}
@@ -130,7 +156,7 @@ export function SavingsScreen({ onBack }: { onBack: () => void }) {
 
       {activeGoal.saved > 0 && (
         <Button
-          variant="ghost"
+          variant="quiet"
           block
           onClick={() => {
             setWithdrawAmount(Math.min(10, activeGoal.saved))
@@ -141,42 +167,37 @@ export function SavingsScreen({ onBack }: { onBack: () => void }) {
         </Button>
       )}
 
-      <Button variant="secondary" block onClick={() => dispatch({ type: 'chooseGoal', goalId: '' })}>
-        🎯 Выбрать другую цель
+      <Button variant="quiet" block icon="target" onClick={() => dispatch({ type: 'chooseGoal', goalId: '' })}>
+        Выбрать другую цель
       </Button>
 
       {/* Снятие: предпросмотр последствий */}
       <Sheet open={withdrawOpen} onClose={() => setWithdrawOpen(false)} title="Снять из копилки">
-        <div className="stack">
-          <p>Сколько снять?</p>
-          <Stepper
-            value={withdrawAmount}
-            onChange={setWithdrawAmount}
-            max={activeGoal.saved}
-            step={10}
-            label="Сумма снятия"
-          />
-
-          <Note tone="warn" title="Что изменится">
-            <div className="stack stack--tight">
-              <span>{preview.warning}</span>
-              <span className="muted">{preview.forecastAfter.explanation}</span>
-            </div>
-          </Note>
-
-          <Button
-            variant="danger"
-            block
-            large
-            disabled={withdrawAmount <= 0}
-            onClick={() => setConfirmWithdraw(true)}
-          >
-            Снять {withdrawAmount} Ф
-          </Button>
-          <Button variant="ghost" block onClick={() => setWithdrawOpen(false)}>
-            Оставить в копилке
-          </Button>
-        </div>
+        <h2>Снять из копилки</h2>
+        <Stepper
+          value={withdrawAmount}
+          onChange={setWithdrawAmount}
+          max={activeGoal.saved}
+          step={10}
+          label="Сумма снятия"
+        />
+        <Note tone="hint" title="Что изменится">
+          <div className="stack stack--tight">
+            <span>{preview.warning}</span>
+            <span className="muted">{preview.forecastAfter.explanation}</span>
+          </div>
+        </Note>
+        <Button
+          variant="danger"
+          block
+          disabled={withdrawAmount <= 0}
+          onClick={() => setConfirmWithdraw(true)}
+        >
+          Снять {withdrawAmount} Ф
+        </Button>
+        <Button variant="quiet" block onClick={() => setWithdrawOpen(false)}>
+          Оставить в копилке
+        </Button>
       </Sheet>
 
       <ConfirmSheet
@@ -193,30 +214,7 @@ export function SavingsScreen({ onBack }: { onBack: () => void }) {
         }}
         onCancel={() => setConfirmWithdraw(false)}
       />
-    </Screen>
-  )
-}
-
-function GoalPicker({ onPick }: { onPick: (id: string) => void }) {
-  const { state } = useGame()
-  return (
-    <div className="stack">
-      {state.goals.map((g) => (
-        <button key={g.id} className="item" onClick={() => onPick(g.id)}>
-          <span className="item__emoji" aria-hidden="true">
-            {g.emoji}
-          </span>
-          <span className="stack stack--tight" style={{ minWidth: 0 }}>
-            <span className="item__title">{g.title}</span>
-            <span className="muted">{g.caption}</span>
-            {g.saved > 0 && (
-              <span className="muted">Уже накоплено: {g.saved} Ф</span>
-            )}
-          </span>
-          <span className="money">{g.cost} Ф</span>
-        </button>
-      ))}
-    </div>
+    </>
   )
 }
 
@@ -235,72 +233,73 @@ function CustomGoalSheet({
 
   return (
     <Sheet open={open} onClose={onClose} title="Своя цель">
-      <div className="stack">
-        <p>На что копим?</p>
-        <div className="tiles" role="radiogroup" aria-label="На что копим">
-          {CUSTOM_GOAL_SUBJECTS.map((s) => (
-            <button
-              key={s.id}
-              role="radio"
-              aria-checked={subjectId === s.id}
-              className="tile tile--rel"
-              onClick={() => setSubjectId(s.id)}
-            >
-              {subjectId === s.id && (
-                <span className="tile__check" aria-hidden="true">
-                  ✓
-                </span>
-              )}
-              <span style={{ fontSize: 28 }} aria-hidden="true">
-                {s.emoji}
+      <h2>Своя цель</h2>
+
+      <p>На что копим?</p>
+      <div className="tiles" role="radiogroup" aria-label="На что копим">
+        {CUSTOM_GOAL_SUBJECTS.map((s) => (
+          <button
+            key={s.id}
+            role="radio"
+            aria-checked={subjectId === s.id}
+            className="tile"
+            onClick={() => setSubjectId(s.id)}
+          >
+            {subjectId === s.id && (
+              <span className="tile__check" aria-hidden="true">
+                <Icon name="check" color="#fff" size={14} width={3} />
               </span>
-              <span>{s.title}</span>
-            </button>
-          ))}
-        </div>
-
-        <p>Сколько стоит?</p>
-        <div className="tiles" role="radiogroup" aria-label="Стоимость цели">
-          {CUSTOM_GOAL_COSTS.map((c) => (
-            <button
-              key={c}
-              role="radio"
-              aria-checked={cost === c}
-              className="tile tile--rel"
-              onClick={() => setCost(c)}
-            >
-              {cost === c && (
-                <span className="tile__check" aria-hidden="true">
-                  ✓
-                </span>
-              )}
-              <span style={{ fontSize: 20, fontWeight: 800 }}>{c} Ф</span>
-            </button>
-          ))}
-        </div>
-
-        <Button
-          block
-          large
-          onClick={() =>
-            onCreate({
-              id: `custom-${subject.id}-${cost}`,
-              title: subject.title,
-              emoji: subject.emoji,
-              cost,
-              caption: 'Твоя собственная цель.',
-              custom: true,
-              saved: 0,
-              achievedAtPeriod: null,
-            })
-          }
-        >
-          Копить на {subject.title.toLowerCase()}
-        </Button>
-        <Button variant="ghost" block onClick={onClose}>
-          Отмена
-        </Button>
+            )}
+            <Icon name={s.icon} size={28} color="var(--brand)" />
+            {s.title}
+          </button>
+        ))}
       </div>
+
+      <p>Сколько стоит?</p>
+      <div className="tiles" role="radiogroup" aria-label="Стоимость цели">
+        {CUSTOM_GOAL_COSTS.map((c) => (
+          <button
+            key={c}
+            role="radio"
+            aria-checked={cost === c}
+            className="tile"
+            style={{ minHeight: 64 }}
+            onClick={() => setCost(c)}
+          >
+            {cost === c && (
+              <span className="tile__check" aria-hidden="true">
+                <Icon name="check" color="#fff" size={14} width={3} />
+              </span>
+            )}
+            <span className="num" style={{ fontSize: 20 }}>
+              {c} Ф
+            </span>
+          </button>
+        ))}
+      </div>
+
+      <Button
+        variant="save"
+        block
+        onClick={() =>
+          onCreate({
+            id: `custom-${subject.id}-${cost}`,
+            title: subject.title,
+            icon: subject.icon,
+            cost,
+            caption: 'Твоя собственная цель.',
+            custom: true,
+            saved: 0,
+            achievedAtPeriod: null,
+          })
+        }
+      >
+        Копить на {subject.title.toLowerCase()}
+      </Button>
+      <Button variant="quiet" block onClick={onClose}>
+        Отмена
+      </Button>
     </Sheet>
   )
 }

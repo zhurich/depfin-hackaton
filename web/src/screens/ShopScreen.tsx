@@ -2,16 +2,38 @@ import { useState } from 'react'
 
 import { ESSENTIAL_ITEMS, OPTIONAL_ITEMS, SHOP_ITEMS } from '../content/shop'
 import { QUESTS } from '../content/quests'
-import { Button, Card, Money, Note, Screen, Sheet } from '../components/ui'
-import { STAT_EMOJI, STAT_LABEL } from '../domain/pet'
+import { Icon } from '../components/Icon'
+import {
+  Button,
+  Card,
+  Glyph,
+  Money,
+  Note,
+  RowButton,
+  ScreenHead,
+  Sheet,
+} from '../components/ui'
+import { STAT_ICON, STAT_LABEL } from '../domain/pet'
 import { boughtCount, checkPurchase, findCheaperAlternative } from '../domain/purchase'
 import type { PurchaseCheck } from '../domain/purchase'
 import { playSound } from '../platform/sound'
 import { useGame } from '../store/gameStore'
-import type { ShopItem } from '../domain/types'
+import type { ExpenseKind, IconName, ShopItem } from '../domain/types'
 import type { Route } from '../navigation'
 
-export function ShopScreen({ go, onBack }: { go: (r: Route) => void; onBack: () => void }) {
+const KIND_THEME: Record<ExpenseKind, { ink: string; wash: string; label: string }> = {
+  essential: { ink: 'var(--need)', wash: 'var(--need-wash)', label: 'обязательный расход' },
+  optional: { ink: 'var(--want)', wash: 'var(--want-wash)', label: 'необязательный расход' },
+}
+
+const OPTION_ICON: Record<string, IconName> = {
+  quest: 'star',
+  cheaper: 'coin',
+  withdraw: 'jar',
+  'next-period': 'calendar',
+}
+
+export function ShopScreen({ go }: { go: (r: Route) => void }) {
   const { state, dispatch, activeGoal, pendingQuestIds } = useGame()
   const [selected, setSelected] = useState<ShopItem | null>(null)
   const [blocked, setBlocked] = useState<{ item: ShopItem; check: PurchaseCheck } | null>(null)
@@ -23,8 +45,8 @@ export function ShopScreen({ go, onBack }: { go: (r: Route) => void; onBack: () 
     return Math.round(pending.reduce((a, q) => a + q.baseReward, 0) / pending.length)
   })()
 
-  const runCheck = (item: ShopItem): PurchaseCheck =>
-    checkPurchase(item, {
+  const openItem = (item: ShopItem) => {
+    const check = checkPurchase(item, {
       balance: state.balance,
       purchases: state.period.purchases,
       cheaperAlternative: findCheaperAlternative(item, SHOP_ITEMS, {
@@ -34,9 +56,6 @@ export function ShopScreen({ go, onBack }: { go: (r: Route) => void; onBack: () 
       averagePendingQuestReward,
       activeGoalSaved: activeGoal?.saved ?? 0,
     })
-
-  const openItem = (item: ShopItem) => {
-    const check = runCheck(item)
     if (!check.allowed) {
       playSound('blocked')
       setBlocked({ item, check })
@@ -55,53 +74,47 @@ export function ShopScreen({ go, onBack }: { go: (r: Route) => void; onBack: () 
   }
 
   return (
-    <Screen title="Покупки" onBack={onBack}>
-      <Card>
-        <div className="row row--between">
-          <span style={{ fontWeight: 700 }}>Свободные финики</span>
-          <span style={{ fontSize: 22 }}>
-            <Money value={state.balance} />
-          </span>
-        </div>
-        {state.planConfirmed && state.plan && (
-          <p className="muted" style={{ marginTop: 8 }}>
-            По плану: нужное — {state.plan.essential} Ф (потрачено {state.period.essentialSpent}),
-            желанное — {state.plan.optional} Ф (потрачено {state.period.optionalSpent}).
-          </p>
-        )}
-      </Card>
+    <>
+      <ScreenHead
+        title="Покупки"
+        sub={
+          state.planConfirmed && state.plan
+            ? `По плану: нужное — ${state.plan.essential} Ф (потрачено ${state.period.essentialSpent}), желанное — ${state.plan.optional} Ф (потрачено ${state.period.optionalSpent}).`
+            : 'Сначала составь план — тогда будет видно, сколько можно тратить.'
+        }
+      />
 
       {justBought && (
         <Note tone="good" title="Покупка сделана">
-          «{justBought}» куплено. Посмотри, как изменились показатели Финни на главном экране.
+          «{justBought}» куплено. Посмотри, как изменились показатели Финни.
         </Note>
       )}
 
       <Section
+        icon="check"
+        theme={KIND_THEME.essential}
         title="Сначала нужное"
-        subtitle="Без этого Финни будет грустить"
         items={ESSENTIAL_ITEMS}
         onPick={openItem}
-        state={state}
       />
-
       <Section
+        icon="plus"
+        theme={KIND_THEME.optional}
         title="Потом желанное"
-        subtitle="Можно купить, а можно отложить — это не ошибка"
         items={OPTIONAL_ITEMS}
         onPick={openItem}
-        state={state}
       />
 
       {state.period.purchases.length > 0 && (
         <Card>
-          <h3>Что уже куплено на этой неделе</h3>
+          <h3>Куплено на этой неделе</h3>
           <ul style={{ listStyle: 'none', padding: 0, margin: '12px 0 0' }} className="stack stack--tight">
             {state.period.purchases.map((p, i) => (
               <li key={`${p.itemId}-${i}`} className="row row--between">
-                <span>
-                  <span aria-hidden="true">{p.emoji}</span> {p.title}
-                  <span className={`badge badge--${p.kind}`} style={{ marginLeft: 8 }}>
+                <span className="row" style={{ gap: 8, minWidth: 0 }}>
+                  <Icon name={p.icon} color={KIND_THEME[p.kind].ink} size={20} />
+                  {p.title}
+                  <span className={`tag tag--${p.kind === 'essential' ? 'need' : 'want'}`}>
                     {p.kind === 'essential' ? 'нужное' : 'желанное'}
                   </span>
                 </span>
@@ -115,33 +128,34 @@ export function ShopScreen({ go, onBack }: { go: (r: Route) => void; onBack: () 
       {/* Подтверждение покупки */}
       <Sheet open={selected !== null} onClose={() => setSelected(null)} title="Покупка">
         {selected && (
-          <div className="stack">
+          <>
             <div className="row">
-              <span style={{ fontSize: 44 }} aria-hidden="true">
-                {selected.emoji}
-              </span>
-              <div>
-                <h3>{selected.title}</h3>
-                <span className={`badge badge--${selected.kind}`}>
-                  {selected.kind === 'essential' ? 'обязательный расход' : 'необязательный расход'}
+              <Glyph
+                name={selected.icon}
+                wash={KIND_THEME[selected.kind].wash}
+                color={KIND_THEME[selected.kind].ink}
+                ink
+              />
+              <span style={{ flex: 1, minWidth: 0 }}>
+                <span style={{ display: 'block', fontFamily: 'var(--font-head)', fontWeight: 900, fontSize: 20 }}>
+                  {selected.title}
                 </span>
-              </div>
-            </div>
-
-            <div className="row row--between">
-              <span>Цена</span>
-              <span style={{ fontSize: 22 }}>
-                <Money value={selected.price} />
+                <span className={`tag tag--${selected.kind === 'essential' ? 'need' : 'want'}`}>
+                  {KIND_THEME[selected.kind].label}
+                </span>
+              </span>
+              <span className="num" style={{ fontSize: 22 }}>
+                {selected.price} Ф
               </span>
             </div>
 
-            <Note tone="info" title="Что изменится">
+            <Card flat>
               <div className="stack stack--tight">
                 <span>{selected.impact}</span>
-                <span className="muted">
+                <span className="row row--wrap muted" style={{ gap: 12, flexWrap: 'wrap' }}>
                   {Object.entries(selected.effects).map(([k, v]) => (
-                    <span key={k} style={{ marginRight: 12 }}>
-                      {STAT_EMOJI[k as keyof typeof STAT_EMOJI]}{' '}
+                    <span key={k} className="row" style={{ gap: 5 }}>
+                      <Icon name={STAT_ICON[k as keyof typeof STAT_ICON]} size={18} />
                       {STAT_LABEL[k as keyof typeof STAT_LABEL]} +{v}
                     </span>
                   ))}
@@ -150,117 +164,103 @@ export function ShopScreen({ go, onBack }: { go: (r: Route) => void; onBack: () 
                   Останется: <Money value={state.balance - selected.price} />
                 </span>
               </div>
-            </Note>
+            </Card>
 
-            <Button block large onClick={confirmBuy}>
+            <Button variant="good" block onClick={confirmBuy}>
               Купить за {selected.price} Ф
             </Button>
-            <Button variant="ghost" block onClick={() => setSelected(null)}>
+            <Button variant="quiet" block onClick={() => setSelected(null)}>
               Пока не буду
             </Button>
-          </div>
+          </>
         )}
       </Sheet>
 
       {/* Нехватка средств: объяснение и варианты */}
       <Sheet open={blocked !== null} onClose={() => setBlocked(null)} title="Пока не получится">
         {blocked && (
-          <div className="stack">
-            <Note tone="warn" title={blocked.check.reason === 'limit-reached' ? 'Уже хватает' : 'Не хватает фиников'}>
+          <>
+            <Note
+              tone="hint"
+              title={blocked.check.reason === 'limit-reached' ? 'Уже хватает' : 'Не хватает фиников'}
+            >
               {blocked.check.message}
             </Note>
 
             <h3>Что можно сделать</h3>
-            <ul style={{ listStyle: 'none', padding: 0, margin: 0 }} className="stack stack--tight">
+            <div className="stack stack--tight">
               {blocked.check.options.map((o) => (
-                <li key={o.id}>
-                  <button
-                    className="item"
-                    onClick={() => {
-                      setBlocked(null)
-                      if (o.id === 'quest') go('quests')
-                      if (o.id === 'withdraw') go('savings')
-                    }}
-                  >
-                    <span className="item__emoji" aria-hidden="true">
-                      {OPTION_EMOJI[o.id]}
-                    </span>
-                    <span className="stack stack--tight" style={{ minWidth: 0 }}>
-                      <span className="item__title">{o.label}</span>
-                      <span className="muted">{o.hint}</span>
-                    </span>
-                    <span aria-hidden="true">{o.id === 'next-period' ? '' : '›'}</span>
-                  </button>
-                </li>
+                <RowButton
+                  key={o.id}
+                  icon={OPTION_ICON[o.id]}
+                  wash="var(--brand-wash)"
+                  color="var(--brand)"
+                  title={o.label}
+                  sub={o.hint}
+                  right={o.id === 'next-period' ? undefined : <Icon name="chevron" size={20} />}
+                  onClick={() => {
+                    setBlocked(null)
+                    if (o.id === 'quest') go('quests')
+                    if (o.id === 'withdraw') go('savings')
+                  }}
+                />
               ))}
-            </ul>
+            </div>
 
-            <Button variant="ghost" block onClick={() => setBlocked(null)}>
+            <Button variant="quiet" block onClick={() => setBlocked(null)}>
               Понятно
             </Button>
-          </div>
+          </>
         )}
       </Sheet>
-    </Screen>
+    </>
   )
 }
 
-const OPTION_EMOJI: Record<string, string> = {
-  quest: '🎲',
-  cheaper: '🪙',
-  withdraw: '🐷',
-  'next-period': '📆',
-}
-
 function Section({
+  icon,
+  theme,
   title,
-  subtitle,
   items,
   onPick,
-  state,
 }: {
+  icon: IconName
+  theme: { ink: string; wash: string }
   title: string
-  subtitle: string
   items: ShopItem[]
   onPick: (item: ShopItem) => void
-  state: ReturnType<typeof useGame>['state']
 }) {
+  const { state } = useGame()
   return (
     <section className="stack">
-      <div>
-        <h2>{title}</h2>
-        <p className="muted">{subtitle}</p>
+      <div className="row" style={{ gap: 9 }}>
+        <Glyph name={icon} wash={theme.wash} color={theme.ink} size="sm" />
+        <h2 style={{ fontSize: 19 }}>{title}</h2>
       </div>
+
       {items.map((item) => {
         const bought = boughtCount(state.period.purchases, item.id)
         const soldOut = bought >= item.perPeriodLimit
-        const tooExpensive = item.price > state.balance
+        const short = item.price - state.balance
         return (
-          <button
+          <RowButton
             key={item.id}
-            className={`item${soldOut ? ' item--done' : ''}${tooExpensive && !soldOut ? ' item--blocked' : ''}`}
-            onClick={() => onPick(item)}
-          >
-            <span className="item__emoji" aria-hidden="true">
-              {item.emoji}
-            </span>
-            <span className="stack stack--tight" style={{ minWidth: 0 }}>
-              <span className="item__title">
+            icon={item.icon}
+            wash={theme.wash}
+            color={theme.ink}
+            title={
+              <>
                 {item.title}
                 {bought > 0 && <span className="muted"> · куплено {bought}</span>}
-              </span>
-              <span className="muted">{item.impact}</span>
-              {tooExpensive && !soldOut && (
-                <span style={{ color: 'var(--c-warn)', fontSize: 15 }}>
-                  ⚠ не хватает {item.price - state.balance} Ф
-                </span>
-              )}
-              {soldOut && (
-                <span style={{ color: 'var(--c-good)', fontSize: 15 }}>✓ на эту неделю хватит</span>
-              )}
-            </span>
-            <span className="money">{item.price} Ф</span>
-          </button>
+              </>
+            }
+            sub={item.impact}
+            note={soldOut ? 'на эту неделю хватит' : short > 0 ? `не хватает ${short} Ф` : undefined}
+            noteColor={soldOut ? 'var(--need-deep)' : 'var(--warn-ink)'}
+            dim={soldOut || short > 0}
+            right={<span className="row-btn__price">{item.price} Ф</span>}
+            onClick={() => onPick(item)}
+          />
         )
       })}
     </section>
