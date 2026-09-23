@@ -1,6 +1,7 @@
 import { useState } from 'react'
 
 import { ONBOARDING_SLIDES } from '../content/glossary'
+import { Icon } from '../components/Icon'
 import { Button, Card } from '../components/ui'
 
 export function OnboardingScreen({
@@ -19,27 +20,39 @@ export function OnboardingScreen({
   return (
     <div className="screen">
       <main className="content" style={{ justifyContent: 'center' }}>
-        <Card>
-          <div className="stack" style={{ alignItems: 'center', textAlign: 'center' }}>
-            <div style={{ fontSize: 68 }} aria-hidden="true">
-              {slide.emoji}
-            </div>
-            <h1>{slide.title}</h1>
-            <p style={{ fontSize: 18 }}>{slide.text}</p>
+        <Card tone="cream" style={{ textAlign: 'center', padding: '28px 20px' }}>
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 16 }}>
+            <span
+              style={{
+                width: 92,
+                height: 92,
+                borderRadius: 999,
+                background: '#fff',
+                border: '3px solid var(--ink)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+              aria-hidden="true"
+            >
+              <Icon name={slide.icon} color="var(--brand)" size={44} width={2.4} />
+            </span>
           </div>
+          <h1>{slide.title}</h1>
+          <p style={{ marginTop: 10 }}>{slide.text}</p>
         </Card>
 
-        <div className="row" style={{ justifyContent: 'center' }} aria-hidden="true">
+        <div className="row" style={{ justifyContent: 'center', gap: 6 }} aria-hidden="true">
           {ONBOARDING_SLIDES.map((_, i) => (
             <span
-              key={i}
               style={{
-                width: i === index ? 26 : 10,
+                width: i === index ? 28 : 10,
                 height: 10,
                 borderRadius: 999,
-                background: i === index ? 'var(--c-brand)' : 'var(--c-border)',
+                background: i === index ? 'var(--brand)' : 'var(--cream-border)',
                 transition: 'width .2s ease',
               }}
+              key={i}
             />
           ))}
         </div>
@@ -47,26 +60,20 @@ export function OnboardingScreen({
           Шаг {index + 1} из {ONBOARDING_SLIDES.length}
         </p>
 
-        <div className="stack">
-          <Button
-            block
-            large
-            onClick={() => (last ? onDone() : setIndex(index + 1))}
-          >
-            {last ? (reviewMode ? 'Закрыть' : 'Начать игру') : 'Дальше'}
-          </Button>
+        <Button block onClick={() => (last ? onDone() : setIndex(index + 1))}>
+          {last ? (reviewMode ? 'Закрыть' : 'Начать игру') : 'Дальше'}
+        </Button>
 
-          {index > 0 && (
-            <Button variant="ghost" block onClick={() => setIndex(index - 1)}>
-              Назад
-            </Button>
-          )}
-          {index === 0 && onSkip && (
-            <Button variant="ghost" block onClick={onSkip}>
-              Пропустить
-            </Button>
-          )}
-        </div>
+        {index > 0 && (
+          <Button variant="quiet" block onClick={() => setIndex(index - 1)}>
+            Назад
+          </Button>
+        )}
+        {index === 0 && onSkip && (
+          <Button variant="quiet" block onClick={onSkip}>
+            Пропустить
+          </Button>
+        )}
       </main>
     </div>
   )

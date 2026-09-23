@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 
 import { ACCESSORIES, PALETTES, SPECIES } from '../content/appearance'
 import { Pet } from '../components/Pet'
+import { Icon } from '../components/Icon'
 import { Button, Card, Note } from '../components/ui'
 import { randomLook } from '../domain/state'
 import type { PetLook } from '../domain/types'
@@ -22,11 +23,7 @@ export function CreatePetScreen({
   const [playerName, setPlayerName] = useState('')
 
   const canCreate = petName.trim().length > 0 && playerName.trim().length > 0
-
-  const combinations = useMemo(
-    () => SPECIES.length * PALETTES.length * ACCESSORIES.length,
-    [],
-  )
+  const combinations = useMemo(() => SPECIES.length * PALETTES.length * ACCESSORIES.length, [])
 
   return (
     <div className="screen">
@@ -35,11 +32,23 @@ export function CreatePetScreen({
       </header>
 
       <main className="content">
-        <Card>
-          <div className="pet-stage">
-            <Pet look={look} size={168} />
+        <Card tone="cream" style={{ position: 'relative', overflow: 'hidden' }}>
+          <div
+            aria-hidden="true"
+            style={{
+              position: 'absolute',
+              left: '-20%',
+              right: '-20%',
+              bottom: 0,
+              height: 110,
+              background: '#FFE0B3',
+              borderRadius: '50% 50% 0 0',
+            }}
+          />
+          <div style={{ position: 'relative', display: 'flex', justifyContent: 'center' }}>
+            <Pet look={look} size={176} />
           </div>
-          <p className="muted" style={{ textAlign: 'center' }}>
+          <p className="muted" style={{ textAlign: 'center', position: 'relative' }}>
             Выбери, каким будет твой Финни. Всего вариантов: {combinations}.
           </p>
         </Card>
@@ -49,7 +58,7 @@ export function CreatePetScreen({
           options={SPECIES.map((s) => ({ id: s.id, title: s.title }))}
           value={look.speciesId}
           onChange={(speciesId) => setLook({ ...look, speciesId })}
-          renderPreview={(id) => <Pet look={{ ...look, speciesId: id }} size={56} animate={false} />}
+          preview={(id) => <Pet look={{ ...look, speciesId: id }} size={58} animate={false} />}
         />
 
         <ChoiceRow
@@ -57,7 +66,7 @@ export function CreatePetScreen({
           options={PALETTES.map((p) => ({ id: p.id, title: p.title }))}
           value={look.paletteId}
           onChange={(paletteId) => setLook({ ...look, paletteId })}
-          renderPreview={(id) => <Pet look={{ ...look, paletteId: id }} size={56} animate={false} />}
+          preview={(id) => <Pet look={{ ...look, paletteId: id }} size={58} animate={false} />}
         />
 
         <ChoiceRow
@@ -65,17 +74,19 @@ export function CreatePetScreen({
           options={ACCESSORIES.map((a) => ({ id: a.id, title: a.title }))}
           value={look.accessoryId}
           onChange={(accessoryId) => setLook({ ...look, accessoryId })}
-          renderPreview={(id) => <Pet look={{ ...look, accessoryId: id }} size={56} animate={false} />}
+          preview={(id) => <Pet look={{ ...look, accessoryId: id }} size={58} animate={false} />}
         />
 
-        <Button variant="secondary" block onClick={() => setLook(randomLook())}>
-          🎲 Удиви меня
+        <Button variant="quiet" block icon="refresh" onClick={() => setLook(randomLook())}>
+          Удиви меня
         </Button>
 
         <Card>
           <div className="stack">
             <label className="stack stack--tight">
-              <span style={{ fontWeight: 700 }}>Как назовём питомца?</span>
+              <span style={{ fontFamily: 'var(--font-head)', fontWeight: 800 }}>
+                Как назовём питомца?
+              </span>
               <input
                 type="text"
                 value={petName}
@@ -89,7 +100,9 @@ export function CreatePetScreen({
             </label>
 
             <label className="stack stack--tight">
-              <span style={{ fontWeight: 700 }}>А как называть тебя в игре?</span>
+              <span style={{ fontFamily: 'var(--font-head)', fontWeight: 800 }}>
+                А как называть тебя в игре?
+              </span>
               <input
                 type="text"
                 value={playerName}
@@ -111,11 +124,8 @@ export function CreatePetScreen({
 
         <Button
           block
-          large
           disabled={!canCreate}
-          onClick={() =>
-            onCreate({ playerName: playerName.trim(), petName: petName.trim(), look })
-          }
+          onClick={() => onCreate({ playerName: playerName.trim(), petName: petName.trim(), look })}
         >
           Готово, начинаем!
         </Button>
@@ -134,32 +144,34 @@ function ChoiceRow({
   options,
   value,
   onChange,
-  renderPreview,
+  preview,
 }: {
   legend: string
   options: { id: string; title: string }[]
   value: string
   onChange: (id: string) => void
-  renderPreview: (id: string) => React.ReactNode
+  preview: (id: string) => React.ReactNode
 }) {
   return (
     <fieldset style={{ border: 'none', padding: 0, margin: 0 }}>
-      <legend style={{ fontWeight: 700, marginBottom: 'var(--sp-2)' }}>{legend}</legend>
+      <legend style={{ fontFamily: 'var(--font-head)', fontWeight: 800, marginBottom: 8 }}>
+        {legend}
+      </legend>
       <div className="tiles" role="radiogroup" aria-label={legend}>
         {options.map((o) => (
           <button
             key={o.id}
             role="radio"
             aria-checked={value === o.id}
-            className="tile tile--rel"
+            className="tile"
             onClick={() => onChange(o.id)}
           >
             {value === o.id && (
               <span className="tile__check" aria-hidden="true">
-                ✓
+                <Icon name="check" color="#fff" size={14} width={3} />
               </span>
             )}
-            <span aria-hidden="true">{renderPreview(o.id)}</span>
+            <span aria-hidden="true">{preview(o.id)}</span>
             <span>{o.title}</span>
           </button>
         ))}
