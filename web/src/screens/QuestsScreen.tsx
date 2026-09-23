@@ -1,34 +1,33 @@
-import { QUESTS, QUEST_TOPICS, TOPIC_EMOJI, TOPIC_TITLES } from '../content/quests'
-import { Card, Note, Screen } from '../components/ui'
+import { QUESTS, QUEST_TOPICS, TOPIC_ICON, TOPIC_TITLES } from '../content/quests'
+import { Glyph, Note, ScreenHead } from '../components/ui'
+import { Icon } from '../components/Icon'
 import { useGame } from '../store/gameStore'
 import type { Quest } from '../domain/types'
 
-export function QuestsScreen({
-  onBack,
-  onOpen,
-}: {
-  onBack: () => void
-  onOpen: (questId: string) => void
-}) {
+export function QuestsScreen({ onOpen }: { onOpen: (questId: string) => void }) {
   const { state } = useGame()
+  const doneCount = Object.keys(state.quests).length
 
   return (
-    <Screen title="Задания" onBack={onBack}>
-      <Note tone="info" title="Как это работает">
-        В каждом задании нужно что-то решить. Объяснение придёт в любом случае — и когда
-        получилось, и когда нет.
-      </Note>
+    <>
+      <ScreenHead
+        title="Задания"
+        sub="Каждое задание — настоящая ситуация. Награда приходит, даже если решил не с первого раза."
+      />
 
       {QUEST_TOPICS.map((topic) => {
         const topicQuests = QUESTS.filter((q) => q.topic === topic)
         return (
           <section key={topic} className="stack">
-            <h2>
-              <span aria-hidden="true">{TOPIC_EMOJI[topic]}</span> {TOPIC_TITLES[topic]}
-            </h2>
+            <div className="row" style={{ gap: 9 }}>
+              <Glyph name={TOPIC_ICON[topic]} wash="var(--brand-wash)" color="var(--brand)" size="sm" />
+              <h2 style={{ fontSize: 19 }}>{TOPIC_TITLES[topic]}</h2>
+            </div>
+
             {topicQuests.map((quest, i) => (
-              <QuestRow
+              <QuestCard
                 key={quest.id}
+                index={i + 1}
                 quest={quest}
                 done={Boolean(state.quests[quest.id])}
                 good={state.quests[quest.id]?.good}
@@ -40,12 +39,10 @@ export function QuestsScreen({
         )
       })}
 
-      <Card flat>
-        <p className="muted">
-          Выполнено заданий: {Object.keys(state.quests).length} из {QUESTS.length}
-        </p>
-      </Card>
-    </Screen>
+      <Note tone="info">
+        Выполнено заданий: {doneCount} из {QUESTS.length}.
+      </Note>
+    </>
   )
 }
 
@@ -59,39 +56,65 @@ function isLocked(
   return !state.quests[topicQuests[index - 1].id]
 }
 
-function QuestRow({
+function QuestCard({
+  index,
   quest,
   done,
   good,
   locked,
   onOpen,
 }: {
+  index: number
   quest: Quest
   done: boolean
   good?: boolean
   locked: boolean
   onOpen: () => void
 }) {
+  const status = done
+    ? good
+      ? 'Решено верно'
+      : 'Пройдено, есть чему поучиться'
+    : locked
+      ? 'Откроется дальше'
+      : 'Можно решать'
+
+  const theme = done
+    ? { bg: 'var(--neutral)', border: 'var(--neutral-border)', badge: 'var(--neutral-border)' }
+    : locked
+      ? { bg: 'var(--card)', border: 'var(--card-border)', badge: 'var(--neutral)' }
+      : { bg: 'var(--card)', border: 'var(--cream-border)', badge: 'var(--sun)' }
+
   return (
     <button
-      className={`item${done ? ' item--done' : ''}`}
+      className="row-btn"
       onClick={onOpen}
       disabled={locked}
-      aria-label={`${quest.title}. ${done ? 'Выполнено' : locked ? 'Откроется позже' : 'Доступно'}`}
+      style={{ background: theme.bg, borderColor: theme.border, alignItems: 'flex-start' }}
+      aria-label={`${quest.title}. ${status}`}
     >
-      <span className="item__emoji" aria-hidden="true">
-        {locked ? '🔒' : done ? (good ? '✅' : '📘') : '🎲'}
-      </span>
-      <span className="stack stack--tight" style={{ minWidth: 0 }}>
-        <span className="item__title">{quest.title}</span>
-        <span className="muted">{locked ? 'Откроется после предыдущего задания' : quest.situation}</span>
-        {done && (
-          <span className="muted">
-            {good ? 'Решено верно' : 'Пройдено, есть чему поучиться'} · можно перечитать разбор
+      <span className="glyph glyph--ink" style={{ background: theme.badge }} aria-hidden="true">
+        {locked ? (
+          <Icon name="lock" color="var(--ink)" size={20} />
+        ) : done ? (
+          <Icon name={good ? 'check' : 'bulb'} color="var(--ink)" size={20} />
+        ) : (
+          <span className="num" style={{ fontSize: 18 }}>
+            {index}
           </span>
         )}
       </span>
-      <span aria-hidden="true">{locked ? '' : '›'}</span>
+
+      <span className="row-btn__body">
+        <span className="row-btn__title">{quest.title}</span>
+        <span className="row-btn__sub">{quest.situation}</span>
+        <span
+          className="tag"
+          style={{ background: '#fff', border: `2px solid ${theme.border}`, marginTop: 6, alignSelf: 'flex-start' }}
+        >
+          {status}
+        </span>
+      </span>
     </button>
   )
 }

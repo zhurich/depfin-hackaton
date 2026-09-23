@@ -1,7 +1,18 @@
 import { useMemo, useState } from 'react'
 
 import { questById } from '../content/quests'
-import { Button, Card, Money, Note, Screen, Stepper } from '../components/ui'
+import { Icon } from '../components/Icon'
+import {
+  Button,
+  Card,
+  Glyph,
+  Money,
+  Note,
+  RowButton,
+  ScreenHead,
+  Stepper,
+} from '../components/ui'
+import { LANE_THEME } from '../domain/budget'
 import { playSound } from '../platform/sound'
 import { useGame } from '../store/gameStore'
 import type { QuestAnswer } from '../domain/quests'
@@ -16,26 +27,12 @@ import type {
   QuestOutcome,
 } from '../domain/types'
 
-export function QuestPlayScreen({
-  questId,
-  onBack,
-}: {
-  questId: string
-  onBack: () => void
-}) {
+export function QuestPlayScreen({ questId, onBack }: { questId: string; onBack: () => void }) {
   const { state, submitQuest } = useGame()
   const quest = questById(questId)
   const [outcome, setOutcome] = useState<QuestOutcome | null>(null)
 
-  const alreadyDone = Boolean(state.quests[questId])
-
-  if (!quest) {
-    return (
-      <Screen title="Задание" onBack={onBack}>
-        <Note tone="warn">Такого задания нет.</Note>
-      </Screen>
-    )
-  }
+  if (!quest) return <Note tone="danger">Такого задания нет.</Note>
 
   const submit = (answer: QuestAnswer) => {
     const result = submitQuest(questId, answer)
@@ -43,25 +40,20 @@ export function QuestPlayScreen({
     setOutcome(result)
   }
 
-  if (outcome) {
-    return <OutcomeView quest={quest} outcome={outcome} onBack={onBack} />
-  }
-
-  if (alreadyDone) {
-    return <ReviewView quest={quest} onBack={onBack} />
-  }
+  if (outcome) return <OutcomeView quest={quest} outcome={outcome} onBack={onBack} />
+  if (state.quests[questId]) return <ReviewView quest={quest} onBack={onBack} />
 
   return (
-    <Screen title={quest.title} onBack={onBack}>
+    <>
       <Card>
-        <p style={{ fontSize: 18 }}>{quest.situation}</p>
+        <h2>{quest.title}</h2>
+        <p style={{ marginTop: 8 }}>{quest.situation}</p>
         <p className="muted" style={{ marginTop: 8 }}>
           {quest.task}
         </p>
       </Card>
-
       {renderPlayer(quest, submit)}
-    </Screen>
+    </>
   )
 }
 
@@ -80,13 +72,32 @@ function renderPlayer(quest: Quest, submit: (a: QuestAnswer) => void) {
   }
 }
 
-function AllocatePlayer({
-  quest,
-  submit,
-}: {
-  quest: AllocateQuest
-  submit: (a: QuestAnswer) => void
-}) {
+function LeftBox({ label, value, bad }: { label: string; value: number; bad?: boolean }) {
+  return (
+    <div
+      className="card"
+      style={{
+        background: bad ? 'var(--danger-wash)' : 'var(--need-wash)',
+        borderColor: bad ? 'var(--danger-border)' : 'var(--need-border)',
+        boxShadow: 'none',
+      }}
+    >
+      <div className="row row--between">
+        <span style={{ fontFamily: 'var(--font-head)', fontWeight: 800, fontSize: 17 }}>{label}</span>
+        <span className="num" style={{ fontSize: 26, color: bad ? 'var(--danger)' : 'var(--need)' }}>
+          {value} Ф
+        </span>
+      </div>
+      {bad && (
+        <p style={{ color: 'var(--danger)', marginTop: 8 }}>
+          Это больше, чем есть. Убери что-нибудь.
+        </p>
+      )}
+    </div>
+  )
+}
+
+function AllocatePlayer({ quest, submit }: { quest: AllocateQuest; submit: (a: QuestAnswer) => void }) {
   const [lanes, setLanes] = useState<Record<string, number>>(
     () => Object.fromEntries(quest.lanes.map((l) => [l.id, 0])),
   )
@@ -95,38 +106,38 @@ function AllocatePlayer({
 
   return (
     <>
-      <Card>
-        <div className="row row--between">
-          <span style={{ fontWeight: 700 }}>Осталось разложить</span>
-          <span style={{ fontSize: 22, color: left === 0 ? 'var(--c-good)' : undefined }}>
-            <Money value={left} />
-            {left === 0 && <span aria-hidden="true"> ✓</span>}
-          </span>
-        </div>
-      </Card>
+      <LeftBox label="Осталось разложить" value={left} />
 
       {quest.lanes.map((lane) => {
+        const theme = LANE_THEME[lane.id]
         const others = total - lanes[lane.id]
         const max = Math.max(0, quest.amount - others)
         return (
-          <div key={lane.id} className={`lane lane--${lane.id}`}>
-            <div style={{ fontWeight: 800, marginBottom: 'var(--sp-2)' }}>
-              <span aria-hidden="true">{lane.emoji}</span> {lane.title}
+          <div
+            key={lane.id}
+            className="lane"
+            style={{ background: theme.wash, borderColor: theme.border, boxShadow: `0 5px 0 ${theme.border}` }}
+          >
+            <div className="lane__flap" style={{ background: theme.border }} aria-hidden="true" />
+            <div className="lane__body">
+              <div className="row">
+                <Glyph name={lane.icon} wash={theme.ink} color="#fff" size="sm" />
+                <span className="lane__title">{lane.title}</span>
+              </div>
+              <Stepper
+                value={lanes[lane.id]}
+                onChange={(v) => setLanes({ ...lanes, [lane.id]: Math.min(v, max) })}
+                max={max}
+                step={10}
+                label={lane.title}
+              />
             </div>
-            <Stepper
-              value={lanes[lane.id]}
-              onChange={(v) => setLanes({ ...lanes, [lane.id]: Math.min(v, max) })}
-              max={max}
-              step={10}
-              label={lane.title}
-            />
           </div>
         )
       })}
 
       <Button
         block
-        large
         onClick={() => submit({ kind: 'allocate', lanes: lanes as Partial<Record<BudgetLane, number>> })}
       >
         Готово
@@ -140,9 +151,7 @@ function AllocatePlayer({
 
 function BasketPlayer({ quest, submit }: { quest: BasketQuest; submit: (a: QuestAnswer) => void }) {
   const [selected, setSelected] = useState<string[]>([])
-  const spent = quest.options
-    .filter((o) => selected.includes(o.id))
-    .reduce((a, o) => a + o.price, 0)
+  const spent = quest.options.filter((o) => selected.includes(o.id)).reduce((a, o) => a + o.price, 0)
   const left = quest.budget - spent
 
   const toggle = (id: string) =>
@@ -150,20 +159,7 @@ function BasketPlayer({ quest, submit }: { quest: BasketQuest; submit: (a: Quest
 
   return (
     <>
-      <Card>
-        <div className="row row--between">
-          <span style={{ fontWeight: 700 }}>Осталось денег</span>
-          <span style={{ fontSize: 22, color: left < 0 ? 'var(--c-danger)' : undefined }}>
-            <Money value={left} />
-            {left < 0 && <span aria-hidden="true"> ⚠</span>}
-          </span>
-        </div>
-        {left < 0 && (
-          <p style={{ color: 'var(--c-danger)', marginTop: 8 }}>
-            В корзине больше, чем есть денег. Убери что-нибудь.
-          </p>
-        )}
-      </Card>
+      <LeftBox label="Осталось денег" value={left} bad={left < 0} />
 
       <div className="stack">
         {quest.options.map((o) => {
@@ -171,24 +167,28 @@ function BasketPlayer({ quest, submit }: { quest: BasketQuest; submit: (a: Quest
           return (
             <button
               key={o.id}
-              className="item"
+              className="row-btn"
               aria-pressed={picked}
               onClick={() => toggle(o.id)}
+              style={{
+                background: picked ? 'var(--need-wash)' : 'var(--card)',
+                borderColor: picked ? 'var(--need)' : 'var(--card-border)',
+              }}
             >
-              <span className="item__emoji" aria-hidden="true">
-                {o.emoji}
+              <Glyph name={o.icon} wash="#fff" color="var(--brand)" />
+              <span className="row-btn__body">
+                <span className="row-btn__title">{o.title}</span>
+                <span className="row-btn__sub" style={{ fontWeight: 700 }}>
+                  {picked ? '✓ в корзине' : 'нажми, чтобы положить'}
+                </span>
               </span>
-              <span className="stack stack--tight" style={{ minWidth: 0 }}>
-                <span className="item__title">{o.title}</span>
-                <span className="muted">{picked ? '✓ в корзине' : 'нажми, чтобы положить'}</span>
-              </span>
-              <span className="money">{o.price} Ф</span>
+              <span className="row-btn__price">{o.price} Ф</span>
             </button>
           )
         })}
       </div>
 
-      <Button block large onClick={() => submit({ kind: 'basket', selected })}>
+      <Button block icon="cart" onClick={() => submit({ kind: 'basket', selected })}>
         К кассе
       </Button>
     </>
@@ -206,29 +206,25 @@ function OrderPlayer({ quest, submit }: { quest: OrderQuest; submit: (a: QuestAn
     setOrder(next)
   }
 
-  const byId = useMemo(
-    () => Object.fromEntries(quest.items.map((i) => [i.id, i])),
-    [quest.items],
-  )
+  const byId = useMemo(() => Object.fromEntries(quest.items.map((i) => [i.id, i])), [quest.items])
 
   return (
     <>
-      <Note tone="info">Стрелками подними наверх самое важное.</Note>
+      <Note tone="hint">Стрелками подними наверх самое важное.</Note>
 
       <ol style={{ listStyle: 'none', padding: 0, margin: 0 }} className="stack">
         {order.map((id, index) => (
-          <li key={id} className="item" style={{ cursor: 'default' }}>
-            <span className="item__emoji" aria-hidden="true">
-              {byId[id].emoji}
-            </span>
-            <span className="stack stack--tight" style={{ minWidth: 0 }}>
-              <span className="item__title">
+          <li key={id} className="row-btn" style={{ cursor: 'default' }}>
+            <Glyph name={byId[id].icon} wash="var(--brand-wash)" color="var(--brand)" />
+            <span className="row-btn__body">
+              <span className="row-btn__title">
                 {index + 1}. {byId[id].title}
               </span>
             </span>
-            <span className="row" style={{ gap: 4 }}>
+            <span className="row" style={{ gap: 6 }}>
               <button
                 className="stepper__btn"
+                style={{ width: 48, height: 48, fontSize: 20 }}
                 onClick={() => move(index, -1)}
                 disabled={index === 0}
                 aria-label={`${byId[id].title}: поднять выше`}
@@ -237,6 +233,7 @@ function OrderPlayer({ quest, submit }: { quest: OrderQuest; submit: (a: QuestAn
               </button>
               <button
                 className="stepper__btn"
+                style={{ width: 48, height: 48, fontSize: 20 }}
                 onClick={() => move(index, 1)}
                 disabled={index === order.length - 1}
                 aria-label={`${byId[id].title}: опустить ниже`}
@@ -248,7 +245,7 @@ function OrderPlayer({ quest, submit }: { quest: OrderQuest; submit: (a: QuestAn
         ))}
       </ol>
 
-      <Button block large onClick={() => submit({ kind: 'order', order })}>
+      <Button block onClick={() => submit({ kind: 'order', order })}>
         Готово
       </Button>
     </>
@@ -265,34 +262,31 @@ function NumberPlayer({ quest, submit }: { quest: NumberQuest; submit: (a: Quest
     <>
       <Card>
         <label className="stack stack--tight">
-          <span style={{ fontWeight: 700 }}>Твой ответ ({quest.unit})</span>
+          <span style={{ fontFamily: 'var(--font-head)', fontWeight: 800 }}>
+            Твой ответ ({quest.unit})
+          </span>
           <input
             type="number"
             inputMode="numeric"
             value={value}
             onChange={(e) => setValue(e.target.value)}
             placeholder="0"
-            style={{ fontSize: 24, textAlign: 'center' }}
+            style={{ fontSize: 26, textAlign: 'center' }}
           />
         </label>
       </Card>
 
       {!showHint ? (
-        <Button variant="ghost" block onClick={() => setShowHint(true)}>
-          💡 Подсказка
+        <Button variant="quiet" block icon="bulb" onClick={() => setShowHint(true)}>
+          Подсказка
         </Button>
       ) : (
-        <Note tone="warn" title="Подсказка">
+        <Note tone="hint" title="Подсказка">
           {quest.hint}
         </Note>
       )}
 
-      <Button
-        block
-        large
-        disabled={!valid}
-        onClick={() => submit({ kind: 'number', value: parsed })}
-      >
+      <Button block disabled={!valid} onClick={() => submit({ kind: 'number', value: parsed })}>
         Ответить
       </Button>
     </>
@@ -303,19 +297,15 @@ function ChoicePlayer({ quest, submit }: { quest: ChoiceQuest; submit: (a: Quest
   return (
     <div className="stack">
       {quest.options.map((o) => (
-        <button
+        <RowButton
           key={o.id}
-          className="item"
+          icon={o.icon}
+          wash="var(--brand-wash)"
+          color="var(--brand)"
+          title={o.title}
+          right={<Icon name="chevron" size={20} />}
           onClick={() => submit({ kind: 'choice', optionId: o.id })}
-        >
-          <span className="item__emoji" aria-hidden="true">
-            {o.emoji}
-          </span>
-          <span className="stack stack--tight" style={{ minWidth: 0 }}>
-            <span className="item__title">{o.title}</span>
-          </span>
-          <span aria-hidden="true">›</span>
-        </button>
+        />
       ))}
     </div>
   )
@@ -332,29 +322,69 @@ function OutcomeView({
   outcome: QuestOutcome
   onBack: () => void
 }) {
+  const good = outcome.good
   return (
-    <Screen title={quest.title} onBack={onBack}>
-      <Card>
-        <div className="stack" style={{ alignItems: 'center', textAlign: 'center' }}>
-          <div style={{ fontSize: 56 }} aria-hidden="true">
-            {outcome.good ? '🎉' : '💡'}
-          </div>
-          <h2>{outcome.good ? 'Получилось!' : 'Разберём вместе'}</h2>
-          <p style={{ fontSize: 18 }}>{outcome.explanation}</p>
+    <div className="stack pop">
+      <div
+        className="card"
+        style={{
+          background: good ? 'var(--need-wash)' : 'var(--cream)',
+          borderColor: good ? 'var(--need-border)' : 'var(--cream-border)',
+          boxShadow: `0 5px 0 ${good ? 'var(--need-border)' : 'var(--cream-border)'}`,
+          textAlign: 'center',
+          padding: '22px 18px',
+        }}
+      >
+        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 12 }}>
+          <span
+            style={{
+              width: 76,
+              height: 76,
+              borderRadius: 999,
+              background: '#fff',
+              border: '3px solid var(--ink)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+            aria-hidden="true"
+          >
+            <Icon
+              name={good ? 'check' : 'bulb'}
+              color={good ? 'var(--need)' : 'var(--want)'}
+              size={38}
+              width={2.6}
+            />
+          </span>
         </div>
-      </Card>
+        <h2>{good ? 'Получилось!' : 'Разберём вместе'}</h2>
+        <p style={{ marginTop: 8 }}>{outcome.explanation}</p>
+      </div>
 
-      <Note tone="good" title="Начислено">
-        <span style={{ fontSize: 20 }}>
-          <Money value={outcome.reward} sign="+" />
-        </span>{' '}
-        за задание «{quest.title}».
-      </Note>
+      <div
+        className="card"
+        style={{
+          background: 'var(--need-wash)',
+          borderColor: 'var(--need-border)',
+          boxShadow: 'none',
+        }}
+      >
+        <div className="row row--between">
+          <span style={{ fontFamily: 'var(--font-head)', fontWeight: 800, fontSize: 17 }}>
+            Начислено
+          </span>
+          <span className="num" style={{ fontSize: 26, color: 'var(--need)' }}>
+            <Money value={outcome.reward} sign="+" />
+          </span>
+        </div>
+      </div>
 
-      <Button block large onClick={onBack}>
+      <p className="muted">За задание «{quest.title}».</p>
+
+      <Button variant="good" block onClick={onBack}>
         Дальше
       </Button>
-    </Screen>
+    </div>
   )
 }
 
@@ -363,15 +393,10 @@ function ReviewView({ quest, onBack }: { quest: Quest; onBack: () => void }) {
   const result = state.quests[quest.id]
 
   return (
-    <Screen title={quest.title} onBack={onBack}>
-      <Card>
-        <p style={{ fontSize: 18 }}>{quest.situation}</p>
-        <p className="muted" style={{ marginTop: 8 }}>
-          {quest.task}
-        </p>
-      </Card>
+    <>
+      <ScreenHead title={quest.title} sub={quest.situation} />
 
-      <Note tone={result.good ? 'good' : 'warn'} title="Задание уже пройдено">
+      <Note tone={result.good ? 'good' : 'hint'} title="Задание уже пройдено">
         {result.good
           ? 'Ты решил его верно.'
           : 'Ты его прошёл — и теперь знаешь, как сделать лучше.'}{' '}
@@ -383,10 +408,10 @@ function ReviewView({ quest, onBack }: { quest: Quest; onBack: () => void }) {
         <p style={{ marginTop: 8 }}>{explanationFor(quest)}</p>
       </Card>
 
-      <Button block large onClick={onBack}>
+      <Button block onClick={onBack}>
         Назад к заданиям
       </Button>
-    </Screen>
+    </>
   )
 }
 
