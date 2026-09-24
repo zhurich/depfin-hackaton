@@ -42,4 +42,5 @@ export const MAX_GROWTH_PER_PERIOD =
 
 export const DEMO_PERIODS = 5
 
-export const SCHEMA_VERSION = 1
+// 2 — иконки вместо эмодзи. Миграции в state.ts migrate().
+export const SCHEMA_VERSION = 2
