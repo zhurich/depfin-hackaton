@@ -1,3 +1,4 @@
+// Сквозной сценарий из Приложения А ТЗ, шаги 1–12.
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it } from 'vitest'
@@ -15,7 +16,10 @@ function renderApp() {
   )
 }
 
-async function passIntroAndCreatePet(user: ReturnType<typeof userEvent.setup>) {
+type User = ReturnType<typeof userEvent.setup>
+
+async function passIntroAndCreatePet(user: User) {
+  // Шаг 1
   await user.click(screen.getByRole('button', { name: 'Дальше' }))
   await user.click(screen.getByRole('button', { name: 'Дальше' }))
   await user.click(screen.getByRole('button', { name: 'Дальше' }))
@@ -33,12 +37,18 @@ async function passIntroAndCreatePet(user: ReturnType<typeof userEvent.setup>) {
   await user.click(screen.getByRole('button', { name: /Готово, начинаем/ }))
 }
 
-async function enterParentZone(user: ReturnType<typeof userEvent.setup>) {
-  await user.click(screen.getByRole('button', { name: /Раздел для взрослого/ }))
+async function enterParentZone(user: User) {
+  await user.click(screen.getByRole('button', { name: 'Раздел для взрослого' }))
   const task = screen.getByText(/×/).textContent!
   const [a, b] = task.match(/\d+/g)!.map(Number)
   await user.type(screen.getByLabelText('Ответ на пример'), String(a * b))
   await user.click(screen.getByRole('button', { name: 'Войти' }))
+}
+
+async function confirmPlan(user: User) {
+  await user.click(screen.getByRole('button', { name: /^План/ }))
+  await user.click(screen.getByRole('button', { name: 'Подтвердить план' }))
+  await user.click(screen.getByRole('button', { name: /Да, это мой план/ }))
 }
 
 describe('обязательный сценарий (Приложение А)', () => {
@@ -48,8 +58,10 @@ describe('обязательный сценарий (Приложение А)', 
 
     await passIntroAndCreatePet(user)
 
-    expect(screen.getByText(/Неделя 1 · Капитан/)).toBeInTheDocument()
-    expect(screen.getAllByText(new RegExp(`${STARTING_BALANCE} Ф`)).length).toBeGreaterThan(0)
+    // Шаг 4
+    expect(screen.getByText('Неделя 1')).toBeInTheDocument()
+    expect(screen.getByText('Капитан')).toBeInTheDocument()
+    expect(screen.getByLabelText(`Свободно ${STARTING_BALANCE} фиников`)).toBeInTheDocument()
     expect(screen.getByText('Задание недели')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /Выбрать цель для копилки/ })).toBeInTheDocument()
 
@@ -74,7 +86,7 @@ describe('обязательный сценарий (Приложение А)', 
     await user.click(screen.getByRole('button', { name: /Наклейки/ }))
     await user.click(screen.getByRole('button', { name: /Купить за 20 Ф/ }))
 
-    expect(screen.getByText('Что уже куплено на этой неделе')).toBeInTheDocument()
+    expect(screen.getByText('Куплено на этой неделе')).toBeInTheDocument()
   })
 
   it('не даёт купить при нехватке средств и объясняет варианты', async () => {
@@ -136,9 +148,10 @@ describe('обязательный сценарий (Приложение А)', 
     const demoSwitch = screen.getByRole('switch', { name: /Демонстрационный режим/ })
     expect(demoSwitch).toHaveAttribute('aria-checked', 'false')
     await user.click(demoSwitch)
-    expect(
-      screen.getByRole('switch', { name: /Демонстрационный режим/ }),
-    ).toHaveAttribute('aria-checked', 'true')
+    expect(screen.getByRole('switch', { name: /Демонстрационный режим/ })).toHaveAttribute(
+      'aria-checked',
+      'true',
+    )
     await user.click(screen.getByRole('button', { name: 'Назад' }))
 
     await user.click(screen.getByRole('button', { name: /^Задания/ }))
@@ -153,7 +166,7 @@ describe('обязательный сценарий (Приложение А)', 
     await user.click(screen.getByRole('button', { name: /Выбрать цель для копилки/ }))
     await user.click(screen.getByRole('button', { name: /Самокат для Финни/ }))
 
-    expect(screen.getByText(/Осталось накопить/)).toBeInTheDocument()
+    expect(screen.getByText(/осталось 240 фиников/)).toBeInTheDocument()
     expect(screen.getByText(/Пополни копилку хотя бы один раз/)).toBeInTheDocument()
 
     await user.click(screen.getByRole('button', { name: /Отложить 20 Ф/ }))
@@ -183,19 +196,17 @@ describe('обязательный сценарий (Приложение А)', 
     renderApp()
     await passIntroAndCreatePet(user)
 
-    await user.click(screen.getByRole('button', { name: /^План/ }))
-    await user.click(screen.getByRole('button', { name: 'Подтвердить план' }))
-    await user.click(screen.getByRole('button', { name: /Да, это мой план/ }))
-    await user.click(screen.getByRole('button', { name: 'Назад' }))
+    await confirmPlan(user)
 
-    await user.click(screen.getByRole('button', { name: /Завершить неделю 1/ }))
-    expect(screen.getByText('План и факт')).toBeInTheDocument()
-    expect(screen.getByText('Что будет с Финни')).toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: /^Дом/ }))
+    await user.click(screen.getByRole('button', { name: /^Завершить неделю 1$/ }))
+
+    expect(screen.getByText('Итоги недели 1')).toBeInTheDocument()
+    expect(screen.getByText('Очки роста Финни')).toBeInTheDocument()
 
     await user.click(screen.getByRole('button', { name: /^Завершить неделю 1$/ }))
     await user.click(screen.getByRole('button', { name: /Да, завершить/ }))
 
-    expect(screen.getByText('Неделя 1 закрыта')).toBeInTheDocument()
     expect(screen.getByText('Почему так вышло')).toBeInTheDocument()
     expect(screen.getByText('Следующий шаг')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /Составить план на неделю 2/ })).toBeInTheDocument()
@@ -217,8 +228,8 @@ describe('обязательный сценарий (Приложение А)', 
     unmount()
     renderApp()
 
-    expect(screen.getByText(/Неделя 1 · Капитан/)).toBeInTheDocument()
-    expect(screen.getAllByText(/100 Ф/).length).toBeGreaterThan(0)
+    expect(screen.getByText('Капитан')).toBeInTheDocument()
+    expect(screen.getByLabelText('Свободно 100 фиников')).toBeInTheDocument()
   })
 
   it('открывает раздел для взрослого только после арифметического барьера (шаг 12)', async () => {
@@ -226,8 +237,8 @@ describe('обязательный сценарий (Приложение А)', 
     renderApp()
     await passIntroAndCreatePet(user)
 
-    await user.click(screen.getByRole('button', { name: /Раздел для взрослого/ }))
-    expect(screen.getByText(/Этот раздел — для родителя/)).toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: 'Раздел для взрослого' }))
+    expect(screen.getByText('Проверка для взрослого')).toBeInTheDocument()
     expect(screen.queryByText('Чему учит игра')).not.toBeInTheDocument()
 
     const task = screen.getByText(/×/).textContent!
@@ -240,6 +251,19 @@ describe('обязательный сценарий (Приложение А)', 
     expect(screen.getByText(/Это описание опыта, а не оценка/)).toBeInTheDocument()
   })
 
+  it('барьер не пускает при неверном ответе', async () => {
+    const user = userEvent.setup()
+    renderApp()
+    await passIntroAndCreatePet(user)
+
+    await user.click(screen.getByRole('button', { name: 'Раздел для взрослого' }))
+    await user.type(screen.getByLabelText('Ответ на пример'), '1')
+    await user.click(screen.getByRole('button', { name: 'Войти' }))
+
+    expect(screen.getByRole('alert')).toHaveTextContent(/Не сходится/)
+    expect(screen.queryByText('Чему учит игра')).not.toBeInTheDocument()
+  })
+
   it('сбрасывает тестовый профиль из раздела для взрослого', async () => {
     const user = userEvent.setup()
     renderApp()
@@ -248,7 +272,6 @@ describe('обязательный сценарий (Приложение А)', 
     await user.click(screen.getByRole('button', { name: /^Покупки/ }))
     await user.click(screen.getByRole('button', { name: /Каша/ }))
     await user.click(screen.getByRole('button', { name: /Купить за 20 Ф/ }))
-    await user.click(screen.getByRole('button', { name: 'Назад' }))
 
     await enterParentZone(user)
 
@@ -261,12 +284,12 @@ describe('обязательный сценарий (Приложение А)', 
 })
 
 describe('доступность интерфейса', () => {
-  it('кнопка возврата имеет доступное имя, показатели читаются текстом', async () => {
+  it('на экране поверх вкладок есть кнопка возврата с доступным именем', async () => {
     const user = userEvent.setup()
     renderApp()
     await passIntroAndCreatePet(user)
 
-    await user.click(screen.getByRole('button', { name: /^План/ }))
+    await user.click(screen.getByRole('button', { name: /Словарик/ }))
     const back = screen.getByRole('button', { name: 'Назад' })
     expect(back).toBeInTheDocument()
 
@@ -295,5 +318,17 @@ describe('доступность интерфейса', () => {
     await user.click(screen.getByRole('button', { name: /Посмотреть знакомство ещё раз/ }))
 
     expect(screen.getByText('Знакомься — это Финни')).toBeInTheDocument()
+  })
+
+  it('вкладка активного раздела помечена для программ чтения с экрана', async () => {
+    const user = userEvent.setup()
+    renderApp()
+    await passIntroAndCreatePet(user)
+
+    expect(screen.getByRole('button', { name: /^Дом/ })).toHaveAttribute('aria-current', 'page')
+
+    await user.click(screen.getByRole('button', { name: /^Покупки/ }))
+    expect(screen.getByRole('button', { name: /^Покупки/ })).toHaveAttribute('aria-current', 'page')
+    expect(screen.getByRole('button', { name: /^Дом/ })).not.toHaveAttribute('aria-current')
   })
 })
