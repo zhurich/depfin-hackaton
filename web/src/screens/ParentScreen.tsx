@@ -1,8 +1,10 @@
+// Ответ барьера вводится числом: выбор из трёх вариантов ребёнок подбирает перебором.
 import { useMemo, useState } from 'react'
 
 import { QUESTS, QUEST_TOPICS, TOPIC_TITLES } from '../content/quests'
 import { STAGES } from '../content/appearance'
-import { Button, Card, ConfirmSheet, Money, Note, Screen } from '../components/ui'
+import { Icon } from '../components/Icon'
+import { Button, Card, ConfirmSheet, Money, Note, ScreenHead } from '../components/ui'
 import { stageForGrowth } from '../domain/pet'
 import {
   DEMO_PERIODS,
@@ -13,18 +15,16 @@ import { getAppInfo, requestNativeWipe } from '../platform/bridge'
 import { storageAvailable } from '../platform/storage'
 import { setSoundEnabled } from '../platform/sound'
 import { useGame, wipeLocalProfile } from '../store/gameStore'
-import type { Settings } from '../domain/types'
+import type { IconName, Settings } from '../domain/types'
 
-export function ParentScreen({ onBack }: { onBack: () => void }) {
+export function ParentScreen() {
   const [unlocked, setUnlocked] = useState(false)
-
-  if (!unlocked) return <Gate onPass={() => setUnlocked(true)} onBack={onBack} />
-  return <ParentPanel onBack={onBack} />
+  return unlocked ? <ParentPanel /> : <Gate onPass={() => setUnlocked(true)} />
 }
 
 // Барьер
 
-function Gate({ onPass, onBack }: { onPass: () => void; onBack: () => void }) {
+function Gate({ onPass }: { onPass: () => void }) {
   const task = useMemo(() => {
     const a = 6 + Math.floor(Math.random() * 7) // 6..12
     const b = 7 + Math.floor(Math.random() * 6) // 7..12
@@ -43,16 +43,23 @@ function Gate({ onPass, onBack }: { onPass: () => void; onBack: () => void }) {
   }
 
   return (
-    <Screen title="Раздел для взрослого" onBack={onBack}>
-      <Note tone="info" title="Этот раздел — для родителя">
-        Здесь настройки, прогресс и удаление данных. Чтобы войти, решите пример.
-      </Note>
+    <>
+      <ScreenHead title="Раздел для взрослого" sub="Здесь настройки, прогресс и удаление данных." />
 
-      <Card>
-        <div className="stack">
-          <p style={{ fontSize: 28, textAlign: 'center', fontWeight: 800 }}>
-            {task.a} × {task.b} = ?
-          </p>
+      <div
+        style={{
+          background: 'var(--brand)',
+          color: '#fff',
+          borderRadius: 'var(--r-lg)',
+          padding: 22,
+          textAlign: 'center',
+        }}
+      >
+        <div style={{ fontWeight: 700, fontSize: 14, opacity: 0.75 }}>Проверка для взрослого</div>
+        <div className="num" style={{ fontSize: 34, marginTop: 6 }}>
+          {task.a} × {task.b} = ?
+        </div>
+        <div style={{ marginTop: 16 }}>
           <input
             type="number"
             inputMode="numeric"
@@ -61,22 +68,27 @@ function Gate({ onPass, onBack }: { onPass: () => void; onBack: () => void }) {
               setValue(e.target.value)
               setWrong(false)
             }}
-            style={{ fontSize: 24, textAlign: 'center' }}
+            style={{ fontSize: 26, textAlign: 'center' }}
             aria-label="Ответ на пример"
           />
-          {wrong && <Note tone="warn">Не сходится. Попробуйте ещё раз.</Note>}
-          <Button block large onClick={check} disabled={value.trim() === ''}>
-            Войти
-          </Button>
         </div>
-      </Card>
-    </Screen>
+        {wrong && (
+          <div style={{ color: 'var(--sun)', fontWeight: 700, marginTop: 12 }} role="alert">
+            Не сходится. Попробуйте ещё раз.
+          </div>
+        )}
+      </div>
+
+      <Button block disabled={value.trim() === ''} onClick={check}>
+        Войти
+      </Button>
+    </>
   )
 }
 
 // Панель взрослого
 
-function ParentPanel({ onBack }: { onBack: () => void }) {
+function ParentPanel() {
   const { state, dispatch } = useGame()
   const [confirmReset, setConfirmReset] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
@@ -85,71 +97,71 @@ function ParentPanel({ onBack }: { onBack: () => void }) {
 
   const stage = stageForGrowth(state.growth)
   const doneQuests = Object.keys(state.quests).length
-
   const toggle = (patch: Partial<Settings>) => dispatch({ type: 'settings', patch })
 
   return (
-    <Screen title="Раздел для взрослого" onBack={onBack}>
+    <>
+      {/* Зачем это приложение */}
       <Card>
         <h2>Чему учит игра</h2>
-        <ul style={{ margin: '8px 0 0', paddingLeft: 20 }} className="stack stack--tight">
+        <ul style={{ margin: '10px 0 0', paddingLeft: 20 }} className="stack stack--tight">
           <li>Понимать, что расходы не должны превышать доходы.</li>
           <li>Различать обязательные и необязательные расходы.</li>
           <li>Планировать покупки при ограниченном бюджете.</li>
           <li>Ставить короткую цель и регулярно откладывать часть средств.</li>
           <li>Оценивать свои решения и объяснять, к чему они привели.</li>
         </ul>
-        <Note tone="info">
-          В игре нет реальных денег, рекламы, платных подписок и сбора персональных данных.
-          Внутриигровые финики нельзя купить и нельзя обменять.
-        </Note>
       </Card>
 
+      <Note tone="info">
+        В игре нет реальных денег, рекламы, платных подписок и сбора персональных данных.
+        Внутриигровые финики нельзя купить и нельзя обменять.
+      </Note>
+
+      {/* Прогресс без оценок */}
       <Card>
         <h2>Что уже освоено</h2>
-        <div className="stack stack--tight" style={{ marginTop: 8 }}>
+        <div className="stack stack--tight" style={{ marginTop: 10 }}>
           <Row label="Игровых недель пройдено" value={String(state.history.length)} />
           <Row label="Стадия питомца" value={stage.title} />
           <Row label="Заданий выполнено" value={`${doneQuests} из ${QUESTS.length}`} />
-          <Row
-            label="Недель подряд с пополнением копилки"
-            value={String(state.savingStreak)}
-          />
+          <Row label="Недель подряд с пополнением копилки" value={String(state.savingStreak)} />
         </div>
 
-        <h3 style={{ marginTop: 'var(--sp-4)' }}>Пройденные темы</h3>
+        <h3 style={{ marginTop: 18 }}>Пройденные темы</h3>
         <div className="stack stack--tight" style={{ marginTop: 8 }}>
           {QUEST_TOPICS.map((topic) => {
             const all = QUESTS.filter((q) => q.topic === topic)
             const done = all.filter((q) => state.quests[q.id]).length
-            return (
-              <Row key={topic} label={TOPIC_TITLES[topic]} value={`${done} из ${all.length}`} />
-            )
+            return <Row key={topic} label={TOPIC_TITLES[topic]} value={`${done} из ${all.length}`} />
           })}
         </div>
-
-        <Note tone="info">
-          Это описание опыта, а не оценка. Задание, решённое не с первого раза, тоже засчитывается:
-          ребёнок получает разбор и продолжает игру.
-        </Note>
       </Card>
+
+      <Note tone="hint">
+        Это описание опыта, а не оценка. Задание, решённое не с первого раза, тоже засчитывается:
+        ребёнок получает разбор и продолжает игру.
+      </Note>
 
       {/* Баллы от взрослого */}
       <Card>
         <h2>Поощрить ребёнка</h2>
-        <p className="muted" style={{ margin: '4px 0 12px' }}>
-          Можно начислить игровые финики за дело в реальной жизни — например, за помощь по дому.
-          Не больше {PARENT_BONUS_PER_PERIOD_LIMIT} Ф за неделю, чтобы бонусы не заменяли
-          планирование.
+        <p className="muted" style={{ margin: '6px 0 12px' }}>
+          Можно начислить игровые финики за дело в реальной жизни. Не больше{' '}
+          {PARENT_BONUS_PER_PERIOD_LIMIT} Ф за неделю, чтобы бонусы не заменяли планирование.
         </p>
-        <Row
-          label="Начислено за эту неделю"
-          value={`${state.period.parentBonusThisPeriod} из ${PARENT_BONUS_PER_PERIOD_LIMIT} Ф`}
-        />
-        <Row label="Начислено всего" value={`${state.parentBonusTotal} Ф`} />
-        <div style={{ marginTop: 'var(--sp-3)' }}>
+        <div className="stack stack--tight">
+          <Row
+            label="Начислено за эту неделю"
+            value={`${state.period.parentBonusThisPeriod} из ${PARENT_BONUS_PER_PERIOD_LIMIT} Ф`}
+          />
+          <Row label="Начислено всего" value={`${state.parentBonusTotal} Ф`} />
+        </div>
+        <div style={{ marginTop: 14 }}>
           <Button
+            variant="good"
             block
+            icon="coin"
             disabled={state.period.parentBonusThisPeriod >= PARENT_BONUS_PER_PERIOD_LIMIT}
             onClick={() => dispatch({ type: 'parentBonus' })}
           >
@@ -161,8 +173,9 @@ function ParentPanel({ onBack }: { onBack: () => void }) {
       {/* Настройки */}
       <Card>
         <h2>Настройки</h2>
-        <div className="stack" style={{ marginTop: 8 }}>
+        <div className="stack" style={{ marginTop: 10 }}>
           <Toggle
+            icon="sound"
             label="Звуки"
             hint="Звук только дублирует то, что написано на экране."
             checked={state.settings.sound}
@@ -172,14 +185,16 @@ function ParentPanel({ onBack }: { onBack: () => void }) {
             }}
           />
           <Toggle
+            icon="motion"
             label="Анимации"
             hint="Выключите, если движение отвлекает."
             checked={state.settings.motion}
             onChange={(v) => toggle({ motion: v })}
           />
           <Toggle
+            icon="calendar"
             label="Демонстрационный режим"
-            hint={`Все задания открыты сразу, бонусы не ждут календарного дня. Для показа ${DEMO_PERIODS} недель подряд.`}
+            hint={`Все задания открыты сразу, бонус не ждёт календарного дня. Для показа ${DEMO_PERIODS} недель подряд.`}
             checked={state.settings.demoMode}
             onChange={(v) => toggle({ demoMode: v })}
           />
@@ -189,28 +204,35 @@ function ParentPanel({ onBack }: { onBack: () => void }) {
       {/* Данные */}
       <Card>
         <h2>Данные на устройстве</h2>
-        <p className="muted" style={{ margin: '4px 0 12px' }}>
+        <p className="muted" style={{ margin: '6px 0 12px' }}>
           Профиль хранится только здесь и никуда не передаётся. Ни имя, ни телефон, ни почта не
           собираются.
         </p>
-        <Row label="Хранилище доступно" value={storeOk ? 'да' : 'нет'} />
-        <Row label="Версия приложения" value={`${info.versionName} (${info.versionCode})`} />
-        <Row label="Пакет" value={info.packageName} />
+        <div className="stack stack--tight">
+          <Row label="Хранилище доступно" value={storeOk ? 'да' : 'нет'} />
+          <Row label="Версия приложения" value={`${info.versionName} (${info.versionCode})`} />
+          <Row label="Пакет" value={info.packageName} />
+        </div>
 
-        <div className="stack" style={{ marginTop: 'var(--sp-4)' }}>
-          <Button variant="secondary" block onClick={() => setConfirmReset(true)}>
-            ↺ Сбросить профиль к началу
+        <div className="stack" style={{ marginTop: 16 }}>
+          <Button variant="quiet" block icon="refresh" onClick={() => setConfirmReset(true)}>
+            Сбросить профиль к началу
           </Button>
-          <Button variant="danger" block onClick={() => setConfirmDelete(true)}>
-            🗑 Удалить все данные
+          <Button variant="danger" block icon="trash" onClick={() => setConfirmDelete(true)}>
+            Удалить все данные
           </Button>
         </div>
       </Card>
 
+      <p className="muted">
+        Стадий развития питомца: {STAGES.length}. Развитие зависит от того, закрыты ли обязательные
+        расходы, совпал ли факт с планом и пополнялась ли копилка.
+      </p>
+
       <ConfirmSheet
         open={confirmReset}
         title="Сбросить профиль?"
-        tone="warn"
+        tone="hint"
         details="Игра начнётся заново: питомец, финики, копилка и задания вернутся к исходному состоянию. Настройки сохранятся."
         confirmLabel="Да, сбросить"
         onConfirm={() => {
@@ -234,12 +256,7 @@ function ParentPanel({ onBack }: { onBack: () => void }) {
         }}
         onCancel={() => setConfirmDelete(false)}
       />
-
-      <p className="muted">
-        Стадий развития питомца: {STAGES.length}. Развитие зависит от того, закрыты ли обязательные
-        расходы, совпал ли факт с планом и пополнялась ли копилка.
-      </p>
-    </Screen>
+    </>
   )
 }
 
@@ -247,17 +264,21 @@ function Row({ label, value }: { label: string; value: string }) {
   return (
     <div className="row row--between">
       <span className="muted">{label}</span>
-      <span style={{ fontWeight: 700, textAlign: 'right' }}>{value}</span>
+      <span style={{ fontFamily: 'var(--font-head)', fontWeight: 800, textAlign: 'right' }}>
+        {value}
+      </span>
     </div>
   )
 }
 
 function Toggle({
+  icon,
   label,
   hint,
   checked,
   onChange,
 }: {
+  icon: IconName
   label: string
   hint: string
   checked: boolean
@@ -268,15 +289,28 @@ function Toggle({
       role="switch"
       aria-checked={checked}
       onClick={() => onChange(!checked)}
-      className="item"
-      style={{ gridTemplateColumns: '1fr auto' }}
+      className="row-btn"
     >
-      <span className="stack stack--tight" style={{ minWidth: 0 }}>
-        <span className="item__title">{label}</span>
-        <span className="muted">{hint}</span>
+      <span
+        className="glyph"
+        style={{ background: checked ? 'var(--need-wash)' : 'var(--neutral)' }}
+        aria-hidden="true"
+      >
+        <Icon name={icon} color={checked ? 'var(--need)' : 'var(--ink-soft)'} />
       </span>
-      <span style={{ fontWeight: 700 }}>
-        {checked ? '✅ вкл' : '⬜ выкл'}
+      <span className="row-btn__body">
+        <span className="row-btn__title">{label}</span>
+        <span className="row-btn__sub">{hint}</span>
+      </span>
+      <span
+        className="tag"
+        style={{
+          background: checked ? 'var(--need-wash)' : 'var(--neutral)',
+          color: checked ? 'var(--need-deep)' : 'var(--ink-soft)',
+        }}
+      >
+        <Icon name={checked ? 'check' : 'close'} size={14} width={3} />
+        {checked ? 'вкл' : 'выкл'}
       </span>
     </button>
   )
