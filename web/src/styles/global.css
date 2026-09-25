@@ -528,7 +528,9 @@ input:focus {
   color: var(--ink-soft);
 }
 
+/* span внутри строки — без display:block полоса схлопывается */
 .bar {
+  display: block;
   height: 14px;
   border-radius: 999px;
   background: var(--neutral);
@@ -538,7 +540,9 @@ input:focus {
   background: rgba(255, 255, 255, 0.7);
 }
 .bar__fill {
+  display: block;
   height: 100%;
+  min-width: 0;
   border-radius: 999px;
   transition: width 0.35s ease;
 }
