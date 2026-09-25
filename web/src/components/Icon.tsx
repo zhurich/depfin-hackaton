@@ -91,7 +91,10 @@ export function Icon({
   color?: string
   width?: number
 }) {
+  // неизвестное имя просто не рисуем
   const shape = SHAPES[name]
+  if (!shape) return null
+
   return (
     <svg
       width={size}
