@@ -67,6 +67,7 @@ android {
     }
 }
 
+// Проверяем, что web/dist уже разложен в assets/www (npm run build && node scripts/sync-native.mjs).
 val checkWebAssets by tasks.registering {
     val indexHtml = file("src/main/assets/www/index.html")
     doLast {

@@ -5,7 +5,7 @@ export default defineConfig({
   plugins: [react()],
   base: './',
   build: {
-    outDir: '../android/app/src/main/assets/www',
+    outDir: 'dist',
     emptyOutDir: true,
     target: 'es2019',
     assetsInlineLimit: 8192,

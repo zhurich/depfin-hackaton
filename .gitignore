@@ -16,8 +16,9 @@ android/.cxx/
 *.ap_
 *.dex
 
-# Веб-сборка кладётся в assets и собирается из исходников.
+# Веб-сборка раскладывается по оболочкам скриптом и собирается из исходников.
 android/app/src/main/assets/www/
+ios/FinniPet/www/
 
 # ---------- Node ----------
 web/node_modules/
