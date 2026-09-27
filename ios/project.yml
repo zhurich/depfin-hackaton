@@ -1,0 +1,42 @@
+# XcodeGen: brew install xcodegen && cd ios && xcodegen
+
+name: FinniPet
+
+options:
+  bundleIdPrefix: ru.mosfin
+  createIntermediateGroups: true
+  deploymentTarget:
+    iOS: "15.0"
+
+settings:
+  base:
+    SWIFT_VERSION: "5.9"
+    MARKETING_VERSION: "1.0.0"
+    CURRENT_PROJECT_VERSION: "1"
+    SWIFT_COMPILATION_MODE: wholemodule
+
+targets:
+  FinniPet:
+    type: application
+    platform: iOS
+
+    sources:
+      - path: FinniPet
+        excludes:
+          - "www"
+          - "www/**"
+          - "Info.plist"
+      # создаётся web/scripts/sync-native.mjs
+      - path: FinniPet/www
+        type: folder
+        optional: true
+
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: ru.mosfin.finnipet
+        INFOPLIST_FILE: FinniPet/Info.plist
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
+        TARGETED_DEVICE_FAMILY: "1,2"
+        CODE_SIGN_STYLE: Automatic
+        DEVELOPMENT_TEAM: ""
