@@ -11,8 +11,8 @@ import {
   PARENT_BONUS_PER_PERIOD_LIMIT,
   PARENT_BONUS_STEP,
 } from '../domain/rules'
-import { getAppInfo, requestNativeWipe } from '../platform/bridge'
-import { storageAvailable } from '../platform/storage'
+import { getAppInfo, requestNativeWipe, type Platform } from '../platform/bridge'
+import { storageAvailable, storageKind } from '../platform/storage'
 import { setSoundEnabled } from '../platform/sound'
 import { useGame, wipeLocalProfile } from '../store/gameStore'
 import type { IconName, Settings } from '../domain/types'
@@ -20,6 +20,17 @@ import type { IconName, Settings } from '../domain/types'
 export function ParentScreen() {
   const [unlocked, setUnlocked] = useState(false)
   return unlocked ? <ParentPanel /> : <Gate onPass={() => setUnlocked(true)} />
+}
+
+const PLATFORM_LABEL: Record<Platform, string> = {
+  android: 'Android',
+  ios: 'iOS',
+  web: 'браузер',
+}
+
+const STORAGE_LABEL: Record<'native' | 'browser', string> = {
+  native: 'в приложении',
+  browser: 'в хранилище браузера',
 }
 
 // Барьер
@@ -94,6 +105,7 @@ function ParentPanel() {
   const [confirmDelete, setConfirmDelete] = useState(false)
   const info = useMemo(getAppInfo, [])
   const storeOk = useMemo(storageAvailable, [])
+  const storeKind = useMemo(storageKind, [])
 
   const stage = stageForGrowth(state.growth)
   const doneQuests = Object.keys(state.quests).length
@@ -210,6 +222,8 @@ function ParentPanel() {
         </p>
         <div className="stack stack--tight">
           <Row label="Хранилище доступно" value={storeOk ? 'да' : 'нет'} />
+          <Row label="Где хранится профиль" value={STORAGE_LABEL[storeKind]} />
+          <Row label="Платформа" value={PLATFORM_LABEL[info.platform]} />
           <Row label="Версия приложения" value={`${info.versionName} (${info.versionCode})`} />
           <Row label="Пакет" value={info.packageName} />
         </div>
